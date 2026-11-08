@@ -1,0 +1,328 @@
+<Activity mc:Ignorable="sap sap2010" x:Class="Dispatcher" VisualBasic.Settings="{x:Null}" sap2010:WorkflowViewState.IdRef="ActivityBuilder_1" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uic="clr-namespace:UiPath.Core.Activities;assembly=UiPath.System.Activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>Microsoft.VisualBasic.Activities</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.Expressions</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>System.Data.DataSetExtensions</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Dispatcher - zasilanie kolejki zamówieniami" sap2010:WorkflowViewState.IdRef="Sequence_1">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Default="/Users/adrianczyrek/Documents/RPA_Zamowienia_z_Excela" Name="strFolder" />
+      <Variable x:TypeArguments="x:String" Default="ZamowieniaDoSAP" Name="strNazwaKolejki" />
+      <Variable x:TypeArguments="x:String" Name="strZnacznikCzasu" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtPliki" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtKolumny" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtMapowanie" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtSapWzor" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtBledyWzor" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtBledy" />
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Default="[New Dictionary(Of String, String)()]" Name="dictIndeksy" />
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:Boolean)" Default="[New Dictionary(Of String, Boolean)()]" Name="dictPrzetworzone" />
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+
+    <!-- 1. Pobranie FolderRoboczy z Orchestratora (wymagany) -->
+    <TryCatch DisplayName="Try Catch - FolderRoboczy z Orchestratora" sap2010:WorkflowViewState.IdRef="TryCatch_1">
+      <TryCatch.Try>
+        <Sequence DisplayName="Try" sap2010:WorkflowViewState.IdRef="Sequence_2">
+          <Sequence.Variables>
+            <Variable x:TypeArguments="x:Object" Name="objFolder" />
+          </Sequence.Variables>
+          <ui:GetRobotAsset TimeoutMS="{x:Null}" AssetName="FolderRoboczy" CacheStrategy="None" DisplayName="Get Asset - FolderRoboczy" sap2010:WorkflowViewState.IdRef="GetRobotAsset_1">
+            <ui:GetRobotAsset.Value>
+              <OutArgument x:TypeArguments="x:Object">[objFolder]</OutArgument>
+            </ui:GetRobotAsset.Value>
+          </ui:GetRobotAsset>
+          <If Condition="[objFolder IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(objFolder.ToString)]" DisplayName="Czy asset ma wartość?" sap2010:WorkflowViewState.IdRef="If_1">
+            <If.Then>
+              <Assign DisplayName="strFolder = asset" sap2010:WorkflowViewState.IdRef="Assign_1">
+                <Assign.To><OutArgument x:TypeArguments="x:String">[strFolder]</OutArgument></Assign.To>
+                <Assign.Value><InArgument x:TypeArguments="x:String">[objFolder.ToString.Trim]</InArgument></Assign.Value>
+              </Assign>
+            </If.Then>
+            <If.Else>
+              <Throw DisplayName="Asset pusty — FolderRoboczy" sap2010:WorkflowViewState.IdRef="Throw_1">
+                <Throw.Exception><InArgument x:TypeArguments="s:Exception">[New Exception("Asset 'FolderRoboczy' ma pustą wartość. Skonfiguruj ścieżkę w Orchestratorze.")]</InArgument></Throw.Exception>
+              </Throw>
+            </If.Else>
+          </If>
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch_1">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+            </ActivityAction.Argument>
+            <Throw DisplayName="Asset wymagany — brak FolderRoboczy" sap2010:WorkflowViewState.IdRef="Throw_2">
+              <Throw.Exception><InArgument x:TypeArguments="s:Exception">[New Exception("Asset 'FolderRoboczy' nie jest skonfigurowany. " &amp; exception.Message)]</InArgument></Throw.Exception>
+            </Throw>
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+    <!-- 2. Pobranie NazwaKolejki z Orchestratora (z domyślną) -->
+    <TryCatch DisplayName="Try Catch - NazwaKolejki z Orchestratora" sap2010:WorkflowViewState.IdRef="TryCatch_2">
+      <TryCatch.Try>
+        <Sequence DisplayName="Try" sap2010:WorkflowViewState.IdRef="Sequence_3">
+          <Sequence.Variables>
+            <Variable x:TypeArguments="x:Object" Name="objKolejka" />
+          </Sequence.Variables>
+          <ui:GetRobotAsset TimeoutMS="{x:Null}" AssetName="NazwaKolejki" CacheStrategy="None" DisplayName="Get Asset - NazwaKolejki" sap2010:WorkflowViewState.IdRef="GetRobotAsset_2">
+            <ui:GetRobotAsset.Value>
+              <OutArgument x:TypeArguments="x:Object">[objKolejka]</OutArgument>
+            </ui:GetRobotAsset.Value>
+          </ui:GetRobotAsset>
+          <If Condition="[objKolejka IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(objKolejka.ToString)]" DisplayName="Czy asset NazwaKolejki ma wartość?" sap2010:WorkflowViewState.IdRef="If_2">
+            <If.Then>
+              <Assign DisplayName="strNazwaKolejki = asset" sap2010:WorkflowViewState.IdRef="Assign_2">
+                <Assign.To><OutArgument x:TypeArguments="x:String">[strNazwaKolejki]</OutArgument></Assign.To>
+                <Assign.Value><InArgument x:TypeArguments="x:String">[objKolejka.ToString.Trim]</InArgument></Assign.Value>
+              </Assign>
+            </If.Then>
+          </If>
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch_2">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+            </ActivityAction.Argument>
+            <ui:LogMessage DisplayName="Log - brak assetu NazwaKolejki, domyślna" sap2010:WorkflowViewState.IdRef="LogMessage_0" Level="Warn" Message="[&quot;Brak assetu NazwaKolejki (&quot; &amp; exception.Message &amp; &quot;). Używam domyślnej: &quot; &amp; strNazwaKolejki]" />
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+    <Assign DisplayName="Znacznik czasu" sap2010:WorkflowViewState.IdRef="Assign_3">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[strZnacznikCzasu]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[Now.ToString("yyyyMMdd_HHmmss")]</InArgument></Assign.Value>
+    </Assign>
+    <ui:LogMessage DisplayName="Log - start Dispatcher" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info" Message="[&quot;Dispatcher START. Folder: &quot; &amp; strFolder &amp; &quot;, kolejka: &quot; &amp; strNazwaKolejki]" />
+
+    <!-- 3. Wczytanie konfiguracji -->
+    <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[dtPliki]" DisplayName="Read Range Workbook - Pliki" sap2010:WorkflowViewState.IdRef="ReadRange_1" SheetName="Pliki" WorkbookPath="[Path.Combine(strFolder, &quot;Config&quot;, &quot;Konfiguracja_klientow.xlsx&quot;)]" />
+    <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[dtKolumny]" DisplayName="Read Range Workbook - Kolumny" sap2010:WorkflowViewState.IdRef="ReadRange_2" SheetName="Kolumny" WorkbookPath="[Path.Combine(strFolder, &quot;Config&quot;, &quot;Konfiguracja_klientow.xlsx&quot;)]" />
+    <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[dtMapowanie]" DisplayName="Read Range Workbook - Mapowanie" sap2010:WorkflowViewState.IdRef="ReadRange_3" SheetName="Mapowanie" WorkbookPath="[Path.Combine(strFolder, &quot;Config&quot;, &quot;Mapowanie_indeksow.xlsx&quot;)]" />
+    <ui:GenerateDataTable ColumnSeparators="{x:Null}" ColumnSizes="{x:Null}" NewLineSeparator="{x:Null}" Positions="{x:Null}" AutoDetectTypes="False" CSVParsing="True" DataTable="[dtSapWzor]" DisplayName="Tabela SAP — wzór" sap2010:WorkflowViewState.IdRef="GenerateDataTable_1" Input="[&quot;NrZamowienia,Klient,IndeksKlienta,IndeksWewnetrzny,Ilosc,DataDostawy,PlikZrodlowy&quot;]" UseColumnHeader="True" />
+    <ui:GenerateDataTable ColumnSeparators="{x:Null}" ColumnSizes="{x:Null}" NewLineSeparator="{x:Null}" Positions="{x:Null}" AutoDetectTypes="False" CSVParsing="True" DataTable="[dtBledyWzor]" DisplayName="Tabela błędów — wzór" sap2010:WorkflowViewState.IdRef="GenerateDataTable_2" Input="[&quot;PlikZrodlowy,Klient,NrZamowienia,IndeksKlienta,Ilosc,Powod&quot;]" UseColumnHeader="True" />
+    <Assign DisplayName="Pusta tabela błędów (akumulowana)" sap2010:WorkflowViewState.IdRef="Assign_4">
+      <Assign.To><OutArgument x:TypeArguments="sd:DataTable">[dtBledy]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="sd:DataTable">[dtBledyWzor.Clone()]</InArgument></Assign.Value>
+    </Assign>
+
+    <!-- 4. Budowa słownika indeksów -->
+    <ui:ForEachRow ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DataTable="[dtMapowanie]" DisplayName="Słownik indeksów (Klient|Indeks)" sap2010:WorkflowViewState.IdRef="ForEachRow_1">
+      <ui:ForEachRow.Body>
+        <ActivityAction x:TypeArguments="sd:DataRow">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="sd:DataRow" Name="CurrentRow" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_4">
+            <If Condition="[Not String.IsNullOrWhiteSpace(CurrentRow(&quot;IndeksKlienta&quot;).ToString)]" DisplayName="Czy wiersz niepusty?" sap2010:WorkflowViewState.IdRef="If_3">
+              <If.Then>
+                <Assign DisplayName="Dodaj do słownika" sap2010:WorkflowViewState.IdRef="Assign_5">
+                  <Assign.To><OutArgument x:TypeArguments="x:String">[dictIndeksy(CurrentRow("Klient").ToString.Trim &amp; "|" &amp; CurrentRow("IndeksKlienta").ToString.Trim)]</OutArgument></Assign.To>
+                  <Assign.Value><InArgument x:TypeArguments="x:String">[CurrentRow("IndeksWewnetrzny").ToString.Trim]</InArgument></Assign.Value>
+                </Assign>
+              </If.Then>
+            </If>
+          </Sequence>
+        </ActivityAction>
+      </ui:ForEachRow.Body>
+    </ui:ForEachRow>
+
+    <!-- 5. Przetwarzanie plików — dla każdego: walidacja → kolejka -->
+    <ui:ForEach x:TypeArguments="x:String" CurrentIndex="{x:Null}" DisplayName="Dla każdego pliku *.xlsx w Input" sap2010:WorkflowViewState.IdRef="ForEach_1" Values="[Directory.GetFiles(Path.Combine(strFolder, &quot;Input&quot;), &quot;*.xlsx&quot;).Where(Function(f) Not Path.GetFileName(f).StartsWith(&quot;~$&quot;)).OrderBy(Function(f) f).ToList()]">
+      <ui:ForEach.Body>
+        <ActivityAction x:TypeArguments="x:String">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="x:String" Name="strSciezka" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_5">
+            <Sequence.Variables>
+              <Variable x:TypeArguments="x:String" Name="strNazwaPliku" />
+              <Variable x:TypeArguments="x:String" Name="strKlient" />
+              <Variable x:TypeArguments="sd:DataTable" Name="dtSapPlik" />
+              <Variable x:TypeArguments="sd:DataTable" Name="dtBledyPlik" />
+            </Sequence.Variables>
+            <Assign DisplayName="Nazwa pliku" sap2010:WorkflowViewState.IdRef="Assign_6">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[strNazwaPliku]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[Path.GetFileName(strSciezka)]</InArgument></Assign.Value>
+            </Assign>
+            <Assign DisplayName="Wyczyść klienta" sap2010:WorkflowViewState.IdRef="Assign_7">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[strKlient]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[String.Empty]</InArgument></Assign.Value>
+            </Assign>
+            <ui:LogMessage DisplayName="Log - przetwarzam plik" sap2010:WorkflowViewState.IdRef="LogMessage_2" Level="Info" Message="[&quot;Dispatcher: &quot; &amp; strNazwaPliku]" />
+            <TryCatch DisplayName="Try Catch - jeden plik" sap2010:WorkflowViewState.IdRef="TryCatch_3">
+              <TryCatch.Try>
+                <Sequence DisplayName="Try" sap2010:WorkflowViewState.IdRef="Sequence_6">
+                  <!-- Walidacja przez PrzetworzPlik -->
+                  <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="PrzetworzPlik - walidacja" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_1" UnSafe="False" WorkflowFileName="PrzetworzPlik.xaml">
+                    <ui:InvokeWorkflowFile.Arguments>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_SciezkaPliku">[strSciezka]</InArgument>
+                      <InArgument x:TypeArguments="sd:DataTable" x:Key="in_dtPliki">[dtPliki]</InArgument>
+                      <InArgument x:TypeArguments="sd:DataTable" x:Key="in_dtKolumny">[dtKolumny]</InArgument>
+                      <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_dictIndeksy">[dictIndeksy]</InArgument>
+                      <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Boolean)" x:Key="in_dictPrzetworzone">[dictPrzetworzone]</InArgument>
+                      <InArgument x:TypeArguments="sd:DataTable" x:Key="in_dtSapWzor">[dtSapWzor]</InArgument>
+                      <InArgument x:TypeArguments="sd:DataTable" x:Key="in_dtBledyWzor">[dtBledyWzor]</InArgument>
+                      <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_dtSapPlik">[dtSapPlik]</OutArgument>
+                      <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_dtBledyPlik">[dtBledyPlik]</OutArgument>
+                      <OutArgument x:TypeArguments="x:String" x:Key="out_Klient">[strKlient]</OutArgument>
+                    </ui:InvokeWorkflowFile.Arguments>
+                  </ui:InvokeWorkflowFile>
+
+                  <!-- Dodaj poprawne wiersze do kolejki Orchestratora -->
+                  <ui:ForEachRow ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DataTable="[dtSapPlik]" DisplayName="Dla każdego poprawnego wiersza → kolejka" sap2010:WorkflowViewState.IdRef="ForEachRow_2">
+                    <ui:ForEachRow.Body>
+                      <ActivityAction x:TypeArguments="sd:DataRow">
+                        <ActivityAction.Argument>
+                          <DelegateInArgument x:TypeArguments="sd:DataRow" Name="CurrentRow" />
+                        </ActivityAction.Argument>
+                        <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_7">
+                          <Sequence.Variables>
+                            <Variable x:TypeArguments="scg:Dictionary(x:String, x:Object)" Name="dictItemData" Default="[New Dictionary(Of String, Object)()]" />
+                          </Sequence.Variables>
+                          <Assign DisplayName="ItemData - NrZamowienia" sap2010:WorkflowViewState.IdRef="Assign_8">
+                            <Assign.To><OutArgument x:TypeArguments="x:Object">[dictItemData("NrZamowienia")]</OutArgument></Assign.To>
+                            <Assign.Value><InArgument x:TypeArguments="x:Object">[CurrentRow("NrZamowienia").ToString]</InArgument></Assign.Value>
+                          </Assign>
+                          <Assign DisplayName="ItemData - Klient" sap2010:WorkflowViewState.IdRef="Assign_9">
+                            <Assign.To><OutArgument x:TypeArguments="x:Object">[dictItemData("Klient")]</OutArgument></Assign.To>
+                            <Assign.Value><InArgument x:TypeArguments="x:Object">[CurrentRow("Klient").ToString]</InArgument></Assign.Value>
+                          </Assign>
+                          <Assign DisplayName="ItemData - IndeksKlienta" sap2010:WorkflowViewState.IdRef="Assign_10">
+                            <Assign.To><OutArgument x:TypeArguments="x:Object">[dictItemData("IndeksKlienta")]</OutArgument></Assign.To>
+                            <Assign.Value><InArgument x:TypeArguments="x:Object">[CurrentRow("IndeksKlienta").ToString]</InArgument></Assign.Value>
+                          </Assign>
+                          <Assign DisplayName="ItemData - IndeksWewnetrzny" sap2010:WorkflowViewState.IdRef="Assign_11">
+                            <Assign.To><OutArgument x:TypeArguments="x:Object">[dictItemData("IndeksWewnetrzny")]</OutArgument></Assign.To>
+                            <Assign.Value><InArgument x:TypeArguments="x:Object">[CurrentRow("IndeksWewnetrzny").ToString]</InArgument></Assign.Value>
+                          </Assign>
+                          <Assign DisplayName="ItemData - Ilosc" sap2010:WorkflowViewState.IdRef="Assign_12">
+                            <Assign.To><OutArgument x:TypeArguments="x:Object">[dictItemData("Ilosc")]</OutArgument></Assign.To>
+                            <Assign.Value><InArgument x:TypeArguments="x:Object">[CurrentRow("Ilosc").ToString]</InArgument></Assign.Value>
+                          </Assign>
+                          <Assign DisplayName="ItemData - DataDostawy" sap2010:WorkflowViewState.IdRef="Assign_13">
+                            <Assign.To><OutArgument x:TypeArguments="x:Object">[dictItemData("DataDostawy")]</OutArgument></Assign.To>
+                            <Assign.Value><InArgument x:TypeArguments="x:Object">[CurrentRow("DataDostawy").ToString]</InArgument></Assign.Value>
+                          </Assign>
+                          <Assign DisplayName="ItemData - PlikZrodlowy" sap2010:WorkflowViewState.IdRef="Assign_14">
+                            <Assign.To><OutArgument x:TypeArguments="x:Object">[dictItemData("PlikZrodlowy")]</OutArgument></Assign.To>
+                            <Assign.Value><InArgument x:TypeArguments="x:Object">[CurrentRow("PlikZrodlowy").ToString]</InArgument></Assign.Value>
+                          </Assign>
+                          <!-- Referencja = Klient|NrZamowienia — Orchestrator odrzuca duplikaty automatycznie -->
+                          <TryCatch DisplayName="Try Catch - Add Queue Item" sap2010:WorkflowViewState.IdRef="TryCatch_4">
+                            <TryCatch.Try>
+                              <ui:AddQueueItem DisplayName="Add Queue Item - zamówienie" sap2010:WorkflowViewState.IdRef="AddQueueItem_1" QueueName="[strNazwaKolejki]" Reference="[CurrentRow(&quot;Klient&quot;).ToString &amp; &quot;|&quot; &amp; CurrentRow(&quot;NrZamowienia&quot;).ToString]">
+                                <ui:AddQueueItem.ItemInformation>
+                                  <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[dictItemData]</InArgument>
+                                </ui:AddQueueItem.ItemInformation>
+                              </ui:AddQueueItem>
+                            </TryCatch.Try>
+                            <TryCatch.Catches>
+                              <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch_3">
+                                <ActivityAction x:TypeArguments="s:Exception">
+                                  <ActivityAction.Argument>
+                                    <DelegateInArgument x:TypeArguments="s:Exception" Name="exQueue" />
+                                  </ActivityAction.Argument>
+                                  <Sequence DisplayName="Catch - duplikat kolejki" sap2010:WorkflowViewState.IdRef="Sequence_8">
+                                    <uic:AddDataRow DisplayName="Błąd kolejki → raport" sap2010:WorkflowViewState.IdRef="AddDataRow_1">
+                                      <uic:AddDataRow.DataTable><InOutArgument x:TypeArguments="sd:DataTable">[dtBledy]</InOutArgument></uic:AddDataRow.DataTable>
+                                      <uic:AddDataRow.ArrayRow><InArgument x:TypeArguments="s:Object[]">[New Object() {strNazwaPliku, CurrentRow("Klient").ToString, CurrentRow("NrZamowienia").ToString, CurrentRow("IndeksKlienta").ToString, CurrentRow("Ilosc").ToString, "Duplikat w kolejce: " &amp; exQueue.Message}]</InArgument></uic:AddDataRow.ArrayRow>
+                                    </uic:AddDataRow>
+                                    <ui:LogMessage DisplayName="Log - duplikat kolejki" sap2010:WorkflowViewState.IdRef="LogMessage_3" Level="Warn" Message="[strNazwaPliku &amp; &quot; | &quot; &amp; CurrentRow(&quot;NrZamowienia&quot;).ToString &amp; &quot;: duplikat w kolejce — &quot; &amp; exQueue.Message]" />
+                                  </Sequence>
+                                </ActivityAction>
+                              </Catch>
+                            </TryCatch.Catches>
+                          </TryCatch>
+                          <!-- Zapamiętaj jako przetworzone (dedup w ramach jednego uruchomienia) -->
+                          <Assign DisplayName="Zapamiętaj nr (dedup w ramach uruchomienia)" sap2010:WorkflowViewState.IdRef="Assign_15">
+                            <Assign.To><OutArgument x:TypeArguments="x:Boolean">[dictPrzetworzone(CurrentRow("NrZamowienia").ToString)]</OutArgument></Assign.To>
+                            <Assign.Value><InArgument x:TypeArguments="x:Boolean">[True]</InArgument></Assign.Value>
+                          </Assign>
+                        </Sequence>
+                      </ActivityAction>
+                    </ui:ForEachRow.Body>
+                  </ui:ForEachRow>
+
+                  <!-- Zbierz błędy walidacji -->
+                  <ui:MergeDataTable Destination="[dtBledy]" DisplayName="Dołącz błędy walidacji" sap2010:WorkflowViewState.IdRef="MergeDataTable_1" MissingSchemaAction="Add" Source="[dtBledyPlik]" />
+                  <ui:MoveFile ContinueOnError="{x:Null}" DestinationResource="{x:Null}" PathResource="{x:Null}" Destination="[Path.Combine(strFolder, &quot;Processed&quot;, strNazwaPliku)]" DisplayName="Move File - do Processed" sap2010:WorkflowViewState.IdRef="MoveFile_1" Overwrite="True" Path="[strSciezka]" />
+                  <ui:LogMessage DisplayName="Log - plik OK" sap2010:WorkflowViewState.IdRef="LogMessage_4" Level="Info" Message="[strNazwaPliku &amp; &quot; (&quot; &amp; strKlient &amp; &quot;): do kolejki &quot; &amp; dtSapPlik.Rows.Count.ToString &amp; &quot;, błędów walidacji &quot; &amp; dtBledyPlik.Rows.Count.ToString]" />
+                </Sequence>
+              </TryCatch.Try>
+              <TryCatch.Catches>
+                <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch_4">
+                  <ActivityAction x:TypeArguments="s:Exception">
+                    <ActivityAction.Argument>
+                      <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                    </ActivityAction.Argument>
+                    <Sequence DisplayName="Catch" sap2010:WorkflowViewState.IdRef="Sequence_9">
+                      <uic:AddDataRow DisplayName="Add Data Row - błąd całego pliku" sap2010:WorkflowViewState.IdRef="AddDataRow_2">
+                        <uic:AddDataRow.DataTable><InOutArgument x:TypeArguments="sd:DataTable">[dtBledy]</InOutArgument></uic:AddDataRow.DataTable>
+                        <uic:AddDataRow.ArrayRow><InArgument x:TypeArguments="s:Object[]">[New Object() {strNazwaPliku, strKlient, "", "", "", "CAŁY PLIK: " &amp; exception.Message}]</InArgument></uic:AddDataRow.ArrayRow>
+                      </uic:AddDataRow>
+                      <ui:LogMessage DisplayName="Log - błąd pliku" sap2010:WorkflowViewState.IdRef="LogMessage_5" Level="Error" Message="[&quot;Błąd pliku &quot; &amp; strNazwaPliku &amp; &quot;: &quot; &amp; exception.Message]" />
+                      <ui:MoveFile DestinationResource="{x:Null}" PathResource="{x:Null}" ContinueOnError="True" Destination="[Path.Combine(strFolder, &quot;Error&quot;, strNazwaPliku)]" DisplayName="Move File - do Error" sap2010:WorkflowViewState.IdRef="MoveFile_2" Overwrite="True" Path="[strSciezka]" />
+                    </Sequence>
+                  </ActivityAction>
+                </Catch>
+              </TryCatch.Catches>
+            </TryCatch>
+          </Sequence>
+        </ActivityAction>
+      </ui:ForEach.Body>
+    </ui:ForEach>
+
+    <!-- 6. Zapis raportu błędów -->
+    <If Condition="[dtBledy.Rows.Count &gt; 0]" DisplayName="Czy są błędy?" sap2010:WorkflowViewState.IdRef="If_4">
+      <If.Then>
+        <ui:WriteRange DataTable="[dtBledy]" DisplayName="Write Range Workbook - Raport błędów" sap2010:WorkflowViewState.IdRef="WriteRange_1" SheetName="Bledy" StartingCell="A1" WorkbookPath="[Path.Combine(strFolder, &quot;Output&quot;, &quot;Raport_bledow_&quot; &amp; strZnacznikCzasu &amp; &quot;.xlsx&quot;)]" />
+      </If.Then>
+    </If>
+    <ui:LogMessage DisplayName="Log - koniec Dispatcher" sap2010:WorkflowViewState.IdRef="LogMessage_6" Level="Info" Message="[&quot;Dispatcher KONIEC. Błędów: &quot; &amp; dtBledy.Rows.Count.ToString]" />
+  </Sequence>
+</Activity>
