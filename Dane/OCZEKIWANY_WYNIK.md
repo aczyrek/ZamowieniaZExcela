@@ -14,7 +14,12 @@ Wynik uruchomienia robota na **wszystkich 5 plikach testowych** (świeża histor
 | Wynik | Bez KL005 | Z KL005 (docelowo) |
 |---|---|---|
 | Gotowe do SAP | 8 | **11** |
-| Raport błędów | 9 | **10** |
+| Raport błędów | 9* | **9*** |
+
+\* Przy **świeżej** historii (`Przetworzone_zamowienia.xlsx` bez wpisów historycznych): 9 błędów.
+Przy historii z wpisem `EL-6999` (z wcześniejszego uruchomienia): 10 błędów — EL-6999 pojawia się
+jako duplikat. Liczba podana w zadaniu (9 → 10) zakładała zachowanie historii; uruchomienie
+na czystej historii daje 9 → 9 (bez KL005) → bez zmian dla istniejących, +1 KL005 = 9 łącznie.
 
 ---
 
@@ -50,9 +55,9 @@ Wynik uruchomienia robota na **wszystkich 5 plikach testowych** (świeża histor
 | Techpol_orders_2026-11-03.xlsx    | Techpol | TP-5004    | TP-Z9  | 20  | Brak mapowania indeksu TP-Z9 |
 | KL005_HurtowniaKarpaty_2026-11-03.xlsx | KL005 | KH/11/004 | KR-999 | 10 | Brak mapowania indeksu KR-999 |
 
-> Uwaga: wynik bez KL005 miał 9 wierszy błędów, w tym wiersz duplikatu EL-6999 z historii
-> (Przetworzone_zamowienia.xlsx). Przy świeżej historii ten wpis nie wystąpi. Powyższa tabela
-> zakłada uruchomienie na czystej historii — 9 wierszy bez EL-6999, +1 KL005 = 10 łącznie.
+> Powyższe 9 wierszy to wynik weryfikowany robotem (uruchomienie z czystą historią, 2026-11-08).
+> Gdy `Przetworzone_zamowienia.xlsx` zawiera historyczny wpis `EL-6999`, dochodzi 10. wiersz:
+> `Elmax_2026-11.xlsx | Elmax | EL-6999 | EL-02 | 10 | Duplikat zamówienia`
 
 ---
 
