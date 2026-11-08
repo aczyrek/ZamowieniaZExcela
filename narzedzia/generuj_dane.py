@@ -147,6 +147,24 @@ def generuj_budmat_korekta(katalog: str) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Napojex — klient zamawiający w KARTONACH (JednostkaZamowienia = karton).
+#           SAP liczy w sztukach: ilość do SAP = ilość × Przelicznik
+#           z Mapowanie_indeksow.xlsx (pusty przelicznik = 1).
+#           Konfiguracja: narzedzia/konfiguruj_jednostki.py
+# ---------------------------------------------------------------------------
+def generuj_napojex(katalog: str) -> None:
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Zamówienie"
+    ws.append(["Nr zamówienia", "Indeks", "Ilość kartonów", "Termin dostawy"])
+    ws.append(["NX-001", "NP-330",    10, "20.11.2026"])  # poprawny: 10 kartonów × 24 = 240 szt.
+    ws.append(["NX-002", "NP-500",    3,  "20.11.2026"])  # poprawny: 3 kartony × 12 = 36 szt.
+    ws.append(["NX-003", "NP-ZESTAW", 5,  "21.11.2026"])  # poprawny: pusty przelicznik → 1, 5 szt.
+    ws.append(["NX-004", "NP-330",    0,  "21.11.2026"])  # błąd: ilość <= 0 (w raporcie ilość z pliku)
+    _zapisz(wb, katalog, "Napojex_zamowienie_2026-11-06.xlsx")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> None:
@@ -159,6 +177,7 @@ def main() -> None:
     generuj_kowalski(katalog)
     generuj_kl005(katalog)
     generuj_budmat_korekta(katalog)
+    generuj_napojex(katalog)
     print("Gotowe.")
 
 
