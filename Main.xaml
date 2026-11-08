@@ -51,6 +51,9 @@
       <Variable x:TypeArguments="sd:DataTable" Name="dtNoweHist" />
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Default="[New Dictionary(Of String, String)()]" Name="dictIndeksy" />
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:Boolean)" Default="[New Dictionary(Of String, Boolean)()]" Name="dictPrzetworzone" />
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Default="[New Dictionary(Of String, String)()]" Name="dictWyslaneWUruchomieniu" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtUstawienia" />
+      <Variable x:TypeArguments="x:String" Default="_korekta" Name="strZnacznikKorekty" />
     </Sequence.Variables>
     <sap:WorkflowViewStateService.ViewState>
       <scg:Dictionary x:TypeArguments="x:String, x:Object">
@@ -115,6 +118,45 @@
     <ui:LogMessage DisplayName="Log - start" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info" Message="[&quot;Start. Folder roboczy: &quot; &amp; strFolder]" />
     <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[dtPliki]" DisplayName="Read Range Workbook - Pliki" sap2010:WorkflowViewState.IdRef="ReadRange_1" SheetName="Pliki" WorkbookPath="[Path.Combine(strFolder, &quot;Config&quot;, &quot;Konfiguracja_klientow.xlsx&quot;)]" />
     <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[dtKolumny]" DisplayName="Read Range Workbook - Kolumny" sap2010:WorkflowViewState.IdRef="ReadRange_2" SheetName="Kolumny" WorkbookPath="[Path.Combine(strFolder, &quot;Config&quot;, &quot;Konfiguracja_klientow.xlsx&quot;)]" />
+    <TryCatch DisplayName="Try Catch - ustawienia (arkusz Ustawienia, opcjonalny)" sap2010:WorkflowViewState.IdRef="TryCatch_3">
+      <TryCatch.Try>
+        <Sequence DisplayName="Try" sap2010:WorkflowViewState.IdRef="Sequence_14">
+          <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[dtUstawienia]" DisplayName="Read Range Workbook - Ustawienia" sap2010:WorkflowViewState.IdRef="ReadRange_5" SheetName="Ustawienia" WorkbookPath="[Path.Combine(strFolder, &quot;Config&quot;, &quot;Konfiguracja_klientow.xlsx&quot;)]" />
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_3">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+            </ActivityAction.Argument>
+            <ui:LogMessage DisplayName="Log - brak arkusza Ustawienia, znacznik domyślny" sap2010:WorkflowViewState.IdRef="LogMessage_6" Level="Warn" Message="[&quot;Nie udało się odczytać arkusza Ustawienia (&quot; &amp; exception.Message &amp; &quot;). Znacznik korekty domyślny: &quot; &amp; strZnacznikKorekty]" />
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+    <If Condition="[dtUstawienia IsNot Nothing]" DisplayName="Czy arkusz Ustawienia został odczytany?" sap2010:WorkflowViewState.IdRef="If_6">
+      <If.Then>
+        <Sequence DisplayName="Odczytaj znacznik korekty z ustawień" sap2010:WorkflowViewState.IdRef="Sequence_16">
+          <If Condition="[Not (dtUstawienia.Columns.Contains(&quot;Klucz&quot;) AndAlso dtUstawienia.Columns.Contains(&quot;Wartosc&quot;))]" DisplayName="Czy arkusz Ustawienia ma kolumny Klucz i Wartosc?" sap2010:WorkflowViewState.IdRef="If_7">
+            <If.Then>
+              <Throw DisplayName="Błędny arkusz Ustawienia" sap2010:WorkflowViewState.IdRef="Throw_5">
+                <Throw.Exception><InArgument x:TypeArguments="s:Exception">[New Exception("Arkusz 'Ustawienia' w Konfiguracja_klientow.xlsx musi mieć kolumny 'Klucz' i 'Wartosc'.")]</InArgument></Throw.Exception>
+              </Throw>
+            </If.Then>
+          </If>
+          <Assign DisplayName="Znacznik korekty z ustawień (ZnacznikKorekty)" sap2010:WorkflowViewState.IdRef="Assign_8">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[strZnacznikKorekty]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dtUstawienia.AsEnumerable().Where(Function(r) r("Klucz").ToString.Trim = "ZnacznikKorekty" AndAlso Not String.IsNullOrWhiteSpace(r("Wartosc").ToString)).Select(Function(r) r("Wartosc").ToString.Trim).DefaultIfEmpty(strZnacznikKorekty).First()]</InArgument>
+            </Assign.Value>
+          </Assign>
+        </Sequence>
+      </If.Then>
+    </If>
+    <ui:LogMessage DisplayName="Log - znacznik korekty" sap2010:WorkflowViewState.IdRef="LogMessage_7" Level="Info" Message="[&quot;Znacznik pliku korekty: &quot; &amp; strZnacznikKorekty]" />
     <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[dtMapowanie]" DisplayName="Read Range Workbook - Mapowanie" sap2010:WorkflowViewState.IdRef="ReadRange_3" SheetName="Mapowanie" WorkbookPath="[Path.Combine(strFolder, &quot;Config&quot;, &quot;Mapowanie_indeksow.xlsx&quot;)]" />
     <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[dtHistoria]" DisplayName="Read Range Workbook - Historia" sap2010:WorkflowViewState.IdRef="ReadRange_4" SheetName="Przetworzone" WorkbookPath="[Path.Combine(strFolder, &quot;Config&quot;, &quot;Przetworzone_zamowienia.xlsx&quot;)]" />
     <ui:GenerateDataTable ColumnSeparators="{x:Null}" ColumnSizes="{x:Null}" NewLineSeparator="{x:Null}" Positions="{x:Null}" AutoDetectTypes="False" CSVParsing="True" DataTable="[dtSap]" DisplayName="Tabela SAP (pusta)" sap2010:WorkflowViewState.IdRef="GenerateDataTable_1" Input="[&quot;NrZamowienia,Klient,IndeksKlienta,IndeksWewnetrzny,Ilosc,DataDostawy,PlikZrodlowy&quot;]" UseColumnHeader="True" />
@@ -170,7 +212,7 @@
         </ActivityAction>
       </ui:ForEachRow.Body>
     </ui:ForEachRow>
-    <ui:ForEach x:TypeArguments="x:String" CurrentIndex="{x:Null}" DisplayName="Dla każdego pliku *.xlsx w Input" sap2010:WorkflowViewState.IdRef="ForEach`1_1" Values="[Directory.GetFiles(Path.Combine(strFolder, &quot;Input&quot;), &quot;*.xlsx&quot;).Where(Function(f) Not Path.GetFileName(f).StartsWith(&quot;~$&quot;)).OrderBy(Function(f) f).ToList()]">
+    <ui:ForEach x:TypeArguments="x:String" CurrentIndex="{x:Null}" DisplayName="Dla każdego pliku *.xlsx w Input" sap2010:WorkflowViewState.IdRef="ForEach`1_1" Values="[Directory.GetFiles(Path.Combine(strFolder, &quot;Input&quot;), &quot;*.xlsx&quot;).Where(Function(f) Not Path.GetFileName(f).StartsWith(&quot;~$&quot;)).OrderBy(Function(f) Path.GetFileNameWithoutExtension(f).IndexOf(strZnacznikKorekty, StringComparison.OrdinalIgnoreCase) &gt;= 0).ThenBy(Function(f) f).ToList()]">
       <ui:ForEach.Body>
         <ActivityAction x:TypeArguments="x:String">
           <ActivityAction.Argument>
@@ -215,18 +257,54 @@
                       <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_dtSapPlik">[dtSapPlik]</OutArgument>
                       <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_dtBledyPlik">[dtBledyPlik]</OutArgument>
                       <OutArgument x:TypeArguments="x:String" x:Key="out_Klient">[strKlient]</OutArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_ZnacznikKorekty">[strZnacznikKorekty]</InArgument>
+                      <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_dictWyslaneWUruchomieniu">[dictWyslaneWUruchomieniu]</InArgument>
                     </ui:InvokeWorkflowFile.Arguments>
                   </ui:InvokeWorkflowFile>
                   <ui:MoveFile ContinueOnError="{x:Null}" DestinationResource="{x:Null}" PathResource="{x:Null}" Destination="[Path.Combine(strFolder, &quot;Processed&quot;, strNazwaPliku)]" DisplayName="Move File - do Processed" sap2010:WorkflowViewState.IdRef="MoveFile_1" Overwrite="True" Path="[strSciezka]" />
-                  <ui:MergeDataTable Destination="[dtSap]" DisplayName="Dołącz wiersze SAP z pliku" sap2010:WorkflowViewState.IdRef="MergeDataTable_1" MissingSchemaAction="Add" Source="[dtSapPlik]" />
-                  <ui:MergeDataTable Destination="[dtBledy]" DisplayName="Dołącz błędy z pliku" sap2010:WorkflowViewState.IdRef="MergeDataTable_2" MissingSchemaAction="Add" Source="[dtBledyPlik]" />
-                  <ui:ForEachRow ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DataTable="[dtSapPlik]" DisplayName="Zapamiętaj wysłane zamówienia (duplikaty między plikami + historia)" sap2010:WorkflowViewState.IdRef="ForEachRow_3">
+                  <ui:ForEachRow ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DataTable="[dtSapPlik]" DisplayName="Zapamiętaj wysłane zamówienia (duplikaty między plikami + historia), korekty zastępują pozycje" sap2010:WorkflowViewState.IdRef="ForEachRow_3">
                     <ui:ForEachRow.Body>
                       <ActivityAction x:TypeArguments="sd:DataRow">
                         <ActivityAction.Argument>
                           <DelegateInArgument x:TypeArguments="sd:DataRow" Name="CurrentRow" />
                         </ActivityAction.Argument>
                         <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_8">
+                          <Sequence.Variables>
+                            <Variable x:TypeArguments="x:String" Name="strKluczZamowienia" />
+                          </Sequence.Variables>
+                          <Assign DisplayName="Klucz zamówienia (Klient|NrZamowienia)" sap2010:WorkflowViewState.IdRef="Assign_10">
+                            <Assign.To>
+                              <OutArgument x:TypeArguments="x:String">[strKluczZamowienia]</OutArgument>
+                            </Assign.To>
+                            <Assign.Value>
+                              <InArgument x:TypeArguments="x:String">[CurrentRow("Klient").ToString &amp; "|" &amp; CurrentRow("NrZamowienia").ToString]</InArgument>
+                            </Assign.Value>
+                          </Assign>
+                          <If Condition="[dictWyslaneWUruchomieniu.ContainsKey(strKluczZamowienia)]" DisplayName="Czy wiersz koryguje zamówienie wysłane w tym uruchomieniu?" sap2010:WorkflowViewState.IdRef="If_5">
+                            <If.Then>
+                              <Sequence DisplayName="Korekta - usuń pozycje oryginału z tabeli SAP" sap2010:WorkflowViewState.IdRef="Sequence_15">
+                                <ui:ForEach x:TypeArguments="sd:DataRow" CurrentIndex="{x:Null}" DisplayName="Dla każdej pozycji oryginału w tabeli SAP" sap2010:WorkflowViewState.IdRef="ForEach`1_2" Values="[dtSap.AsEnumerable().Where(Function(r) r(&quot;Klient&quot;).ToString &amp; &quot;|&quot; &amp; r(&quot;NrZamowienia&quot;).ToString = strKluczZamowienia).ToList()]">
+                                  <ui:ForEach.Body>
+                                    <ActivityAction x:TypeArguments="sd:DataRow">
+                                      <ActivityAction.Argument>
+                                        <DelegateInArgument x:TypeArguments="sd:DataRow" Name="rowOryginal" />
+                                      </ActivityAction.Argument>
+                                      <InvokeMethod DisplayName="Usuń pozycję oryginału z tabeli SAP" sap2010:WorkflowViewState.IdRef="InvokeMethod_1" MethodName="Remove">
+                                        <InvokeMethod.TargetObject>
+                                          <InArgument x:TypeArguments="sd:DataRowCollection">[dtSap.Rows]</InArgument>
+                                        </InvokeMethod.TargetObject>
+                                        <InArgument x:TypeArguments="sd:DataRow">[rowOryginal]</InArgument>
+                                      </InvokeMethod>
+                                    </ActivityAction>
+                                  </ui:ForEach.Body>
+                                </ui:ForEach>
+                                <ui:LogMessage DisplayName="Log - korekta zastąpiła pozycje" sap2010:WorkflowViewState.IdRef="LogMessage_8" Level="Info" Message="[&quot;Korekta &quot; &amp; CurrentRow(&quot;NrZamowienia&quot;).ToString &amp; &quot;: usunięto z SAP pozycje z pliku &quot; &amp; dictWyslaneWUruchomieniu(strKluczZamowienia)]" />
+                              </Sequence>
+                            </If.Then>
+                            <If.Else>
+                              <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[New Object() {CurrentRow(&quot;NrZamowienia&quot;).ToString, CurrentRow(&quot;Klient&quot;).ToString, Now.ToString(&quot;yyyy-MM-dd HH:mm&quot;)}]" DataTable="[dtNoweHist]" DisplayName="Add Data Row - nowa historia" sap2010:WorkflowViewState.IdRef="AddDataRow_1" />
+                            </If.Else>
+                          </If>
                           <Assign DisplayName="Oznacz jako przetworzone" sap2010:WorkflowViewState.IdRef="Assign_6">
                             <Assign.To>
                               <OutArgument x:TypeArguments="x:Boolean">[dictPrzetworzone(CurrentRow("NrZamowienia").ToString)]</OutArgument>
@@ -235,11 +313,20 @@
                               <InArgument x:TypeArguments="x:Boolean">[True]</InArgument>
                             </Assign.Value>
                           </Assign>
-                          <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[New Object() {CurrentRow(&quot;NrZamowienia&quot;).ToString, CurrentRow(&quot;Klient&quot;).ToString, Now.ToString(&quot;yyyy-MM-dd HH:mm&quot;)}]" DataTable="[dtNoweHist]" DisplayName="Add Data Row - nowa historia" sap2010:WorkflowViewState.IdRef="AddDataRow_1" />
+                          <Assign DisplayName="Zapamiętaj plik, z którego zamówienie poszło do SAP" sap2010:WorkflowViewState.IdRef="Assign_9">
+                            <Assign.To>
+                              <OutArgument x:TypeArguments="x:String">[dictWyslaneWUruchomieniu(strKluczZamowienia)]</OutArgument>
+                            </Assign.To>
+                            <Assign.Value>
+                              <InArgument x:TypeArguments="x:String">[CurrentRow("PlikZrodlowy").ToString]</InArgument>
+                            </Assign.Value>
+                          </Assign>
                         </Sequence>
                       </ActivityAction>
                     </ui:ForEachRow.Body>
                   </ui:ForEachRow>
+                  <ui:MergeDataTable Destination="[dtSap]" DisplayName="Dołącz wiersze SAP z pliku" sap2010:WorkflowViewState.IdRef="MergeDataTable_1" MissingSchemaAction="Add" Source="[dtSapPlik]" />
+                  <ui:MergeDataTable Destination="[dtBledy]" DisplayName="Dołącz błędy z pliku" sap2010:WorkflowViewState.IdRef="MergeDataTable_2" MissingSchemaAction="Add" Source="[dtBledyPlik]" />
                   <ui:LogMessage DisplayName="Log - plik OK" sap2010:WorkflowViewState.IdRef="LogMessage_3" Level="Info" Message="[strNazwaPliku &amp; &quot; (&quot; &amp; strKlient &amp; &quot;): do SAP &quot; &amp; dtSapPlik.Rows.Count.ToString &amp; &quot;, błędów &quot; &amp; dtBledyPlik.Rows.Count.ToString]" />
                 </Sequence>
               </TryCatch.Try>

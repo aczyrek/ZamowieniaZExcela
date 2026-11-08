@@ -19,7 +19,7 @@ Struktura katalogów roboczych (asset `FolderRoboczy` lub fallback `/Users/adria
 
 ```
 Config/
-  Konfiguracja_klientow.xlsx  (arkusze: Pliki, Kolumny)
+  Konfiguracja_klientow.xlsx  (arkusze: Pliki, Kolumny, Ustawienia — opcjonalny)
   Mapowanie_indeksow.xlsx     (arkusz: Mapowanie)
   Przetworzone_zamowienia.xlsx (arkusz: Przetworzone)
 Input/     ← pliki *.xlsx od klientów

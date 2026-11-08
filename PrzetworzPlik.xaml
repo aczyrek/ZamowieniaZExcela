@@ -23,6 +23,8 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <x:Property Name="out_dtSapPlik" Type="OutArgument(sd:DataTable)" />
     <x:Property Name="out_dtBledyPlik" Type="OutArgument(sd:DataTable)" />
     <x:Property Name="out_Klient" Type="OutArgument(x:String)" />
+    <x:Property Name="in_ZnacznikKorekty" Type="InArgument(x:String)" />
+    <x:Property Name="in_dictWyslaneWUruchomieniu" Type="InArgument(scg:Dictionary(x:String, x:String))" />
   </x:Members>
   <TextExpression.NamespacesForImplementation>
     <sco:Collection x:TypeArguments="x:String">
@@ -69,12 +71,22 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
       <Variable x:TypeArguments="sd:DataTable" Name="dtSapPlik" />
       <Variable x:TypeArguments="sd:DataTable" Name="dtBledyPlik" />
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:Boolean)" Name="dictWPliku" Default="[New Dictionary(Of String, Boolean)()]" />
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Name="dictWyslane" />
+      <Variable x:TypeArguments="x:Boolean" Name="boolKorekta" />
     </Sequence.Variables>
 
     <!-- 1. Rozpoznanie klienta po prefiksie nazwy pliku -->
     <Assign DisplayName="Nazwa pliku" sap2010:WorkflowViewState.IdRef="Assign_1">
       <Assign.To><OutArgument x:TypeArguments="x:String">[strNazwaPliku]</OutArgument></Assign.To>
       <Assign.Value><InArgument x:TypeArguments="x:String">[Path.GetFileName(in_SciezkaPliku)]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="Czy plik jest korektą zamówienia? (znacznik z konfiguracji)" sap2010:WorkflowViewState.IdRef="Assign_26">
+      <Assign.To><OutArgument x:TypeArguments="x:Boolean">[boolKorekta]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:Boolean">[Not String.IsNullOrWhiteSpace(in_ZnacznikKorekty) AndAlso Path.GetFileNameWithoutExtension(strNazwaPliku).IndexOf(in_ZnacznikKorekty.Trim, StringComparison.OrdinalIgnoreCase) &gt;= 0]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="Zamówienia wysłane do SAP w tym uruchomieniu (pusty słownik, jeśli nie podano)" sap2010:WorkflowViewState.IdRef="Assign_27">
+      <Assign.To><OutArgument x:TypeArguments="scg:Dictionary(x:String, x:String)">[dictWyslane]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)">[If(in_dictWyslaneWUruchomieniu, New Dictionary(Of String, String)())]</InArgument></Assign.Value>
     </Assign>
     <Assign DisplayName="Prefiks pliku (tekst przed _)" sap2010:WorkflowViewState.IdRef="Assign_2">
       <Assign.To><OutArgument x:TypeArguments="x:String">[strPrefiks]</OutArgument></Assign.To>
@@ -157,6 +169,7 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
               <Variable x:TypeArguments="x:String" Name="strPowod" />
               <Variable x:TypeArguments="x:Decimal" Name="decIlosc" />
               <Variable x:TypeArguments="s:DateTime" Name="dtDataDostawy" />
+              <Variable x:TypeArguments="x:String" Name="strPlikOryginalu" />
             </Sequence.Variables>
             <Assign DisplayName="Nr zamówienia" sap2010:WorkflowViewState.IdRef="Assign_8">
               <Assign.To><OutArgument x:TypeArguments="x:String">[strNr]</OutArgument></Assign.To>
@@ -176,6 +189,10 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
             </Assign>
             <Assign DisplayName="Powód błędu = pusty" sap2010:WorkflowViewState.IdRef="Assign_12">
               <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[String.Empty]</InArgument></Assign.Value>
+            </Assign>
+            <Assign DisplayName="Plik oryginału korygowanego zamówienia = pusty" sap2010:WorkflowViewState.IdRef="Assign_28">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[strPlikOryginalu]</OutArgument></Assign.To>
               <Assign.Value><InArgument x:TypeArguments="x:String">[String.Empty]</InArgument></Assign.Value>
             </Assign>
             <If DisplayName="Pomiń pusty wiersz" sap2010:WorkflowViewState.IdRef="If_3">
@@ -259,8 +276,30 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
                       </Sequence>
                     </If.Then>
                   </If>
+                  <If DisplayName="Reguła: korekta zamówienia z tego uruchomienia — zastąp pozycje oryginału" sap2010:WorkflowViewState.IdRef="If_13">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso boolKorekta AndAlso Not dictWPliku.ContainsKey(strNr) AndAlso dictWyslane.ContainsKey(strKlient &amp; "|" &amp; strNr)]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_17">
+                        <Assign DisplayName="Zapamiętaj plik oryginału" sap2010:WorkflowViewState.IdRef="Assign_29">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPlikOryginalu]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">[dictWyslane(strKlient &amp; "|" &amp; strNr)]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                  </If>
+                  <If DisplayName="Reguła: korekta zamówienia, którego nie można zastąpić automatycznie" sap2010:WorkflowViewState.IdRef="If_14">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso boolKorekta AndAlso String.IsNullOrEmpty(strPlikOryginalu) AndAlso Not dictWPliku.ContainsKey(strNr) AndAlso in_dictPrzetworzone.ContainsKey(strNr)]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_18">
+                        <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_30">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">["Korekta zamówienia, które zostało już wysłane do SAP (wcześniejsze uruchomienie lub inny klient) — popraw ręcznie w SAP"]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                  </If>
                   <If DisplayName="Reguła: duplikat zamówienia" sap2010:WorkflowViewState.IdRef="If_9">
-                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso (in_dictPrzetworzone.ContainsKey(strNr) OrElse dictWPliku.ContainsKey(strNr))]</InArgument></If.Condition>
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso String.IsNullOrEmpty(strPlikOryginalu) AndAlso (in_dictPrzetworzone.ContainsKey(strNr) OrElse dictWPliku.ContainsKey(strNr))]</InArgument></If.Condition>
                     <If.Then>
                       <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_12">
                         <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_18">
@@ -291,6 +330,26 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
                           <Assign.To><OutArgument x:TypeArguments="x:Boolean">[dictWPliku(strNr)]</OutArgument></Assign.To>
                           <Assign.Value><InArgument x:TypeArguments="x:Boolean">[True]</InArgument></Assign.Value>
                         </Assign>
+                        <If DisplayName="Czy wiersz koryguje zamówienie z tego uruchomienia?" sap2010:WorkflowViewState.IdRef="If_15">
+                          <If.Condition><InArgument x:TypeArguments="x:Boolean">[Not String.IsNullOrEmpty(strPlikOryginalu)]</InArgument></If.Condition>
+                          <If.Then>
+                            <Sequence DisplayName="Informacja o korekcie" sap2010:WorkflowViewState.IdRef="Sequence_19">
+                              <uic:AddDataRow DisplayName="Add Data Row - informacja o korekcie" sap2010:WorkflowViewState.IdRef="AddDataRow_3">
+                                <uic:AddDataRow.DataTable>
+                                  <InOutArgument x:TypeArguments="sd:DataTable">[dtBledyPlik]</InOutArgument>
+                                </uic:AddDataRow.DataTable>
+                                <uic:AddDataRow.ArrayRow>
+                                  <InArgument x:TypeArguments="s:Object[]">[New Object() {strNazwaPliku, strKlient, strNr, strIndeks, strIlosc, "Korekta zamówienia: zastąpiono pozycje z pliku " &amp; strPlikOryginalu}]</InArgument>
+                                </uic:AddDataRow.ArrayRow>
+                              </uic:AddDataRow>
+                              <ui:LogMessage Level="Info" DisplayName="Log - korekta zamówienia" sap2010:WorkflowViewState.IdRef="LogMessage_2">
+                                <ui:LogMessage.Message>
+                                  <InArgument x:TypeArguments="x:Object">[strNazwaPliku &amp; " | " &amp; strNr &amp; ": korekta zastępuje pozycje z pliku " &amp; strPlikOryginalu]</InArgument>
+                                </ui:LogMessage.Message>
+                              </ui:LogMessage>
+                            </Sequence>
+                          </If.Then>
+                        </If>
                       </Sequence>
                     </If.Then>
                     <If.Else>
