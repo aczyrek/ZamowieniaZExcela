@@ -277,23 +277,23 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
                     </If.Then>
                   </If>
                   <If DisplayName="Reguła: korekta zamówienia z tego uruchomienia — zastąp pozycje oryginału" sap2010:WorkflowViewState.IdRef="If_13">
-                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso boolKorekta AndAlso Not dictWPliku.ContainsKey(strNr) AndAlso dictWyslane.ContainsKey(strNr)]</InArgument></If.Condition>
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso boolKorekta AndAlso Not dictWPliku.ContainsKey(strNr) AndAlso dictWyslane.ContainsKey(strKlient &amp; "|" &amp; strNr)]</InArgument></If.Condition>
                     <If.Then>
                       <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_17">
                         <Assign DisplayName="Zapamiętaj plik oryginału" sap2010:WorkflowViewState.IdRef="Assign_29">
                           <Assign.To><OutArgument x:TypeArguments="x:String">[strPlikOryginalu]</OutArgument></Assign.To>
-                          <Assign.Value><InArgument x:TypeArguments="x:String">[dictWyslane(strNr)]</InArgument></Assign.Value>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">[dictWyslane(strKlient &amp; "|" &amp; strNr)]</InArgument></Assign.Value>
                         </Assign>
                       </Sequence>
                     </If.Then>
                   </If>
-                  <If DisplayName="Reguła: korekta zamówienia wysłanego we wcześniejszym uruchomieniu" sap2010:WorkflowViewState.IdRef="If_14">
+                  <If DisplayName="Reguła: korekta zamówienia, którego nie można zastąpić automatycznie" sap2010:WorkflowViewState.IdRef="If_14">
                     <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso boolKorekta AndAlso String.IsNullOrEmpty(strPlikOryginalu) AndAlso Not dictWPliku.ContainsKey(strNr) AndAlso in_dictPrzetworzone.ContainsKey(strNr)]</InArgument></If.Condition>
                     <If.Then>
                       <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_18">
                         <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_30">
                           <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
-                          <Assign.Value><InArgument x:TypeArguments="x:String">["Korekta zamówienia wysłanego do SAP we wcześniejszym uruchomieniu — popraw ręcznie w SAP"]</InArgument></Assign.Value>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">["Korekta zamówienia, które zostało już wysłane do SAP (wcześniejsze uruchomienie lub inny klient) — popraw ręcznie w SAP"]</InArgument></Assign.Value>
                         </Assign>
                       </Sequence>
                     </If.Then>

@@ -135,6 +135,15 @@ def generuj_budmat_korekta(katalog: str) -> None:
     ws.append(["BM/11/003", "BM-205", 80, "20.11.2026"])  # korekta: 80 zamiast 60
     _zapisz(wb, katalog, "Budmat_zamowienia_2026-11-05_korekta.xlsx")
 
+    # Korekta innego klienta z tym samym numerem (BM/11/001 należy do Budmat):
+    # NIE może usunąć pozycji Budmat z SAP — wiersz odrzucony z jasnym powodem.
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Orders"
+    ws.append(["Delivery date", "Qty", "Order No", "Product Code", "Comment"])
+    ws.append([date(2026, 11, 20), 5, "BM/11/001", "TP-A1", None])  # błąd: korekta cudzego zamówienia
+    _zapisz(wb, katalog, "Techpol_orders_2026-11-05_korekta.xlsx")
+
 
 # ---------------------------------------------------------------------------
 # Main

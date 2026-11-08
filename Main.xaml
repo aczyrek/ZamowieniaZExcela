@@ -122,14 +122,6 @@
       <TryCatch.Try>
         <Sequence DisplayName="Try" sap2010:WorkflowViewState.IdRef="Sequence_14">
           <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[dtUstawienia]" DisplayName="Read Range Workbook - Ustawienia" sap2010:WorkflowViewState.IdRef="ReadRange_5" SheetName="Ustawienia" WorkbookPath="[Path.Combine(strFolder, &quot;Config&quot;, &quot;Konfiguracja_klientow.xlsx&quot;)]" />
-          <Assign DisplayName="Znacznik korekty z ustawień (ZnacznikKorekty)" sap2010:WorkflowViewState.IdRef="Assign_8">
-            <Assign.To>
-              <OutArgument x:TypeArguments="x:String">[strZnacznikKorekty]</OutArgument>
-            </Assign.To>
-            <Assign.Value>
-              <InArgument x:TypeArguments="x:String">[dtUstawienia.AsEnumerable().Where(Function(r) r("Klucz").ToString.Trim = "ZnacznikKorekty" AndAlso Not String.IsNullOrWhiteSpace(r("Wartosc").ToString)).Select(Function(r) r("Wartosc").ToString.Trim).DefaultIfEmpty(strZnacznikKorekty).First()]</InArgument>
-            </Assign.Value>
-          </Assign>
         </Sequence>
       </TryCatch.Try>
       <TryCatch.Catches>
@@ -143,6 +135,27 @@
         </Catch>
       </TryCatch.Catches>
     </TryCatch>
+    <If Condition="[dtUstawienia IsNot Nothing]" DisplayName="Czy arkusz Ustawienia został odczytany?" sap2010:WorkflowViewState.IdRef="If_6">
+      <If.Then>
+        <Sequence DisplayName="Odczytaj znacznik korekty z ustawień" sap2010:WorkflowViewState.IdRef="Sequence_16">
+          <If Condition="[Not (dtUstawienia.Columns.Contains(&quot;Klucz&quot;) AndAlso dtUstawienia.Columns.Contains(&quot;Wartosc&quot;))]" DisplayName="Czy arkusz Ustawienia ma kolumny Klucz i Wartosc?" sap2010:WorkflowViewState.IdRef="If_7">
+            <If.Then>
+              <Throw DisplayName="Błędny arkusz Ustawienia" sap2010:WorkflowViewState.IdRef="Throw_5">
+                <Throw.Exception><InArgument x:TypeArguments="s:Exception">[New Exception("Arkusz 'Ustawienia' w Konfiguracja_klientow.xlsx musi mieć kolumny 'Klucz' i 'Wartosc'.")]</InArgument></Throw.Exception>
+              </Throw>
+            </If.Then>
+          </If>
+          <Assign DisplayName="Znacznik korekty z ustawień (ZnacznikKorekty)" sap2010:WorkflowViewState.IdRef="Assign_8">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[strZnacznikKorekty]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dtUstawienia.AsEnumerable().Where(Function(r) r("Klucz").ToString.Trim = "ZnacznikKorekty" AndAlso Not String.IsNullOrWhiteSpace(r("Wartosc").ToString)).Select(Function(r) r("Wartosc").ToString.Trim).DefaultIfEmpty(strZnacznikKorekty).First()]</InArgument>
+            </Assign.Value>
+          </Assign>
+        </Sequence>
+      </If.Then>
+    </If>
     <ui:LogMessage DisplayName="Log - znacznik korekty" sap2010:WorkflowViewState.IdRef="LogMessage_7" Level="Info" Message="[&quot;Znacznik pliku korekty: &quot; &amp; strZnacznikKorekty]" />
     <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[dtMapowanie]" DisplayName="Read Range Workbook - Mapowanie" sap2010:WorkflowViewState.IdRef="ReadRange_3" SheetName="Mapowanie" WorkbookPath="[Path.Combine(strFolder, &quot;Config&quot;, &quot;Mapowanie_indeksow.xlsx&quot;)]" />
     <ui:ReadRange Range="{x:Null}" AddHeaders="True" DataTable="[dtHistoria]" DisplayName="Read Range Workbook - Historia" sap2010:WorkflowViewState.IdRef="ReadRange_4" SheetName="Przetworzone" WorkbookPath="[Path.Combine(strFolder, &quot;Config&quot;, &quot;Przetworzone_zamowienia.xlsx&quot;)]" />
@@ -256,10 +269,21 @@
                           <DelegateInArgument x:TypeArguments="sd:DataRow" Name="CurrentRow" />
                         </ActivityAction.Argument>
                         <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_8">
-                          <If Condition="[dictWyslaneWUruchomieniu.ContainsKey(CurrentRow(&quot;NrZamowienia&quot;).ToString)]" DisplayName="Czy wiersz koryguje zamówienie wysłane w tym uruchomieniu?" sap2010:WorkflowViewState.IdRef="If_5">
+                          <Sequence.Variables>
+                            <Variable x:TypeArguments="x:String" Name="strKluczZamowienia" />
+                          </Sequence.Variables>
+                          <Assign DisplayName="Klucz zamówienia (Klient|NrZamowienia)" sap2010:WorkflowViewState.IdRef="Assign_10">
+                            <Assign.To>
+                              <OutArgument x:TypeArguments="x:String">[strKluczZamowienia]</OutArgument>
+                            </Assign.To>
+                            <Assign.Value>
+                              <InArgument x:TypeArguments="x:String">[CurrentRow("Klient").ToString &amp; "|" &amp; CurrentRow("NrZamowienia").ToString]</InArgument>
+                            </Assign.Value>
+                          </Assign>
+                          <If Condition="[dictWyslaneWUruchomieniu.ContainsKey(strKluczZamowienia)]" DisplayName="Czy wiersz koryguje zamówienie wysłane w tym uruchomieniu?" sap2010:WorkflowViewState.IdRef="If_5">
                             <If.Then>
                               <Sequence DisplayName="Korekta - usuń pozycje oryginału z tabeli SAP" sap2010:WorkflowViewState.IdRef="Sequence_15">
-                                <ui:ForEach x:TypeArguments="sd:DataRow" CurrentIndex="{x:Null}" DisplayName="Dla każdej pozycji oryginału w tabeli SAP" sap2010:WorkflowViewState.IdRef="ForEach`1_2" Values="[dtSap.Select(&quot;NrZamowienia = '&quot; &amp; CurrentRow(&quot;NrZamowienia&quot;).ToString.Replace(&quot;'&quot;, &quot;''&quot;) &amp; &quot;'&quot;)]">
+                                <ui:ForEach x:TypeArguments="sd:DataRow" CurrentIndex="{x:Null}" DisplayName="Dla każdej pozycji oryginału w tabeli SAP" sap2010:WorkflowViewState.IdRef="ForEach`1_2" Values="[dtSap.AsEnumerable().Where(Function(r) r(&quot;Klient&quot;).ToString &amp; &quot;|&quot; &amp; r(&quot;NrZamowienia&quot;).ToString = strKluczZamowienia).ToList()]">
                                   <ui:ForEach.Body>
                                     <ActivityAction x:TypeArguments="sd:DataRow">
                                       <ActivityAction.Argument>
@@ -274,7 +298,7 @@
                                     </ActivityAction>
                                   </ui:ForEach.Body>
                                 </ui:ForEach>
-                                <ui:LogMessage DisplayName="Log - korekta zastąpiła pozycje" sap2010:WorkflowViewState.IdRef="LogMessage_8" Level="Info" Message="[&quot;Korekta &quot; &amp; CurrentRow(&quot;NrZamowienia&quot;).ToString &amp; &quot;: usunięto z SAP pozycje z pliku &quot; &amp; dictWyslaneWUruchomieniu(CurrentRow(&quot;NrZamowienia&quot;).ToString)]" />
+                                <ui:LogMessage DisplayName="Log - korekta zastąpiła pozycje" sap2010:WorkflowViewState.IdRef="LogMessage_8" Level="Info" Message="[&quot;Korekta &quot; &amp; CurrentRow(&quot;NrZamowienia&quot;).ToString &amp; &quot;: usunięto z SAP pozycje z pliku &quot; &amp; dictWyslaneWUruchomieniu(strKluczZamowienia)]" />
                               </Sequence>
                             </If.Then>
                             <If.Else>
@@ -291,7 +315,7 @@
                           </Assign>
                           <Assign DisplayName="Zapamiętaj plik, z którego zamówienie poszło do SAP" sap2010:WorkflowViewState.IdRef="Assign_9">
                             <Assign.To>
-                              <OutArgument x:TypeArguments="x:String">[dictWyslaneWUruchomieniu(CurrentRow("NrZamowienia").ToString)]</OutArgument>
+                              <OutArgument x:TypeArguments="x:String">[dictWyslaneWUruchomieniu(strKluczZamowienia)]</OutArgument>
                             </Assign.To>
                             <Assign.Value>
                               <InArgument x:TypeArguments="x:String">[CurrentRow("PlikZrodlowy").ToString]</InArgument>

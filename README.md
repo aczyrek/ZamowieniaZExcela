@@ -61,11 +61,11 @@ Plik, którego nazwa (bez rozszerzenia) zawiera znacznik korekty (`ZnacznikKorek
 np. `Budmat_zamowienia_2026-11-05_korekta.xlsx`), jest traktowany jako korekta zamówień o tych samych numerach:
 
 - pliki korekt są przetwarzane **po** wszystkich pozostałych plikach z `Input/`,
-- jeśli oryginał zamówienia trafił do SAP **w tym samym uruchomieniu**, pozycje oryginału są usuwane z pliku
+- jeśli oryginał zamówienia (ten sam klient i numer) trafił do SAP **w tym samym uruchomieniu**, pozycje oryginału są usuwane z pliku
   do SAP i zastępowane pozycjami z korekty; w raporcie błędów pojawia się wiersz informacyjny
   `Korekta zamówienia: zastąpiono pozycje z pliku <plik oryginału>`; historia dostaje numer tylko raz,
-- jeśli oryginał został wysłany do SAP **we wcześniejszym uruchomieniu** (jest w historii), wiersz jest
-  odrzucany z powodem `Korekta zamówienia wysłanego do SAP we wcześniejszym uruchomieniu — popraw ręcznie w SAP`,
+- jeśli numer został wysłany do SAP **we wcześniejszym uruchomieniu** (jest w historii) albo w tym uruchomieniu
+  przez innego klienta, wiersz jest odrzucany z powodem `Korekta zamówienia, które zostało już wysłane do SAP (wcześniejsze uruchomienie lub inny klient) — popraw ręcznie w SAP`,
 - jeśli oryginału nie ma ani w uruchomieniu, ani w historii, wiersz korekty jest przetwarzany jak zwykłe zamówienie.
 
 Obsługa korekt dotyczy `Main.xaml`; `Dispatcher.xaml` nie przekazuje znacznika, więc tam korekta jest nadal

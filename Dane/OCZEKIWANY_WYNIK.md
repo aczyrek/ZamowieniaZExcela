@@ -1,6 +1,6 @@
 # Oczekiwany wynik — pełny zestaw danych testowych
 
-Wynik uruchomienia robota na **wszystkich 7 plikach testowych** (świeża historia — pusta
+Wynik uruchomienia robota na **wszystkich 8 plikach testowych** (świeża historia — pusta
 `Przetworzone_zamowienia.xlsx`) wygenerowanych przez `narzedzia/generuj_dane.py`.
 
 > **Uwaga dot. liczby 14/17:** W starszych notatkach pojawiała się wartość 14 wierszy SAP.
@@ -14,15 +14,17 @@ Wynik uruchomienia robota na **wszystkich 7 plikach testowych** (świeża histor
 | Wynik | Bez KL005 | Z KL005 | Z korektą Budmat (zadanie: korekta zamówienia) |
 |---|---|---|---|
 | Gotowe do SAP | 8 | 11 | **13** |
-| Raport błędów | 11* | 11* | **12*** |
+| Raport błędów | 11* | 11* | **13*** |
 
 Korekta zamówienia (pliki `Budmat_zamowienia_2026-11-05.xlsx` + `Budmat_zamowienia_2026-11-05_korekta.xlsx`):
 +2 wiersze SAP (BM/11/001 = 20 szt. z oryginału, BM/11/003 = **80** szt. z korekty — pozycja 60 szt.
 z oryginału została zastąpiona), +1 wiersz informacyjny w raporcie błędów.
+Plik `Techpol_orders_2026-11-05_korekta.xlsx` (korekta numeru BM/11/001, który należy do Budmat):
++1 wiersz odrzucony — korekta nie może usunąć pozycji innego klienta.
 
 \* Po dodaniu walidacji daty dostawy (zadanie 3): +2 nowe błędy w Budmat (BUD-1006 brak daty,
 BUD-1007 data w przeszłości). Raport rośnie z 9 do 11 przy świeżej historii; korekta zamówienia
-dodaje 12. wiersz (informacyjny). Przy historii z wpisem `EL-6999` dochodzi kolejny: `Duplikat zamówienia`.
+dodaje 12. wiersz (informacyjny) i 13. (korekta cudzego numeru). Przy historii z wpisem `EL-6999` dochodzi kolejny: `Duplikat zamówienia`.
 
 ---
 
@@ -49,7 +51,7 @@ dodaje 12. wiersz (informacyjny). Przy historii z wpisem `EL-6999` dochodzi kole
 
 ---
 
-## Raport błędów — 12 wierszy
+## Raport błędów — 13 wierszy
 
 | PlikZrodlowy | Klient | NrZamowienia | IndeksKlienta | Ilosc | Powod |
 |---|---|---|---|---|---|
@@ -65,8 +67,9 @@ dodaje 12. wiersz (informacyjny). Przy historii z wpisem `EL-6999` dochodzi kole
 | Techpol_orders_2026-11-03.xlsx    | Techpol | TP-5004    | TP-Z9  | 20  | Brak mapowania indeksu TP-Z9 |
 | KL005_HurtowniaKarpaty_2026-11-03.xlsx | KL005 | KH/11/004 | KR-999 | 10 | Brak mapowania indeksu KR-999 |
 | Budmat_zamowienia_2026-11-05_korekta.xlsx | Budmat | BM/11/003 | BM-205 | 80 | Korekta zamówienia: zastąpiono pozycje z pliku Budmat_zamowienia_2026-11-05.xlsx |
+| Techpol_orders_2026-11-05_korekta.xlsx | Techpol | BM/11/001 | TP-A1 | 5 | Korekta zamówienia, które zostało już wysłane do SAP (wcześniejsze uruchomienie lub inny klient) — popraw ręcznie w SAP |
 
-> Ostatni wiersz jest **informacyjny** (pozycja nie została odrzucona — trafiła do SAP), żeby
+> Wiersz korekty Budmat jest **informacyjny** (pozycja nie została odrzucona — trafiła do SAP), żeby
 > handlowiec wiedział, że zamówienie zostało skorygowane.
 
 ### Wariant: korekta zamówienia wysłanego we wcześniejszym uruchomieniu
@@ -77,9 +80,9 @@ pozycji automatycznie. Wiersz zostaje odrzucony z jasnym powodem (zamiast „Dup
 
 | PlikZrodlowy | Klient | NrZamowienia | IndeksKlienta | Ilosc | Powod |
 |---|---|---|---|---|---|
-| Budmat_zamowienia_2026-11-05_korekta.xlsx | Budmat | BM/11/003 | BM-205 | 80 | Korekta zamówienia wysłanego do SAP we wcześniejszym uruchomieniu — popraw ręcznie w SAP |
+| Budmat_zamowienia_2026-11-05_korekta.xlsx | Budmat | BM/11/003 | BM-205 | 80 | Korekta zamówienia, które zostało już wysłane do SAP (wcześniejsze uruchomienie lub inny klient) — popraw ręcznie w SAP |
 
-> Powyższe 12 wierszy to wynik z czystą historią (walidacja daty dostawy + korekta zamówienia).
+> Powyższe 13 wierszy to wynik z czystą historią (walidacja daty dostawy + korekta zamówienia).
 > Gdy `Przetworzone_zamowienia.xlsx` zawiera historyczny wpis `EL-6999`, dochodzi 12. wiersz:
 > `Elmax_2026-11.xlsx | Elmax | EL-6999 | EL-02 | 10 | Duplikat zamówienia`
 
