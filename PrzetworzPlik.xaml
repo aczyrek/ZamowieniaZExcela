@@ -1,0 +1,313 @@
+<Activity mc:Ignorable="sap sap2010" x:Class="PrzetworzPlik" mva:VisualBasic.Settings="{x:Null}" sap2010:WorkflowViewState.IdRef="ActivityBuilder_1"
+xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+xmlns:ui="http://schemas.uipath.com/workflow/activities"
+xmlns:uic="clr-namespace:UiPath.Core.Activities;assembly=UiPath.System.Activities"
+xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib"
+xmlns:sc="clr-namespace:System.Collections;assembly=System.Private.CoreLib"
+xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib"
+xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common"
+xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="in_SciezkaPliku" Type="InArgument(x:String)" />
+    <x:Property Name="in_dtPliki" Type="InArgument(sd:DataTable)" />
+    <x:Property Name="in_dtKolumny" Type="InArgument(sd:DataTable)" />
+    <x:Property Name="in_dictIndeksy" Type="InArgument(scg:Dictionary(x:String, x:String))" />
+    <x:Property Name="in_dictPrzetworzone" Type="InArgument(scg:Dictionary(x:String, x:Boolean))" />
+    <x:Property Name="in_dtSapWzor" Type="InArgument(sd:DataTable)" />
+    <x:Property Name="in_dtBledyWzor" Type="InArgument(sd:DataTable)" />
+    <x:Property Name="out_dtSapPlik" Type="OutArgument(sd:DataTable)" />
+    <x:Property Name="out_dtBledyPlik" Type="OutArgument(sd:DataTable)" />
+    <x:Property Name="out_Klient" Type="OutArgument(x:String)" />
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Activities.Expressions</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>Microsoft.VisualBasic.Activities</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>System.Data.DataSetExtensions</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Przetwórz jeden plik zamówień" sap2010:WorkflowViewState.IdRef="Sequence_1">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="strNazwaPliku" />
+      <Variable x:TypeArguments="x:String" Name="strPrefiks" />
+      <Variable x:TypeArguments="x:String" Name="strKlient" />
+      <Variable x:TypeArguments="scg:List(sd:DataRow)" Name="listKonfigPliku" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtWe" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtSapPlik" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtBledyPlik" />
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:Boolean)" Name="dictWPliku" Default="[New Dictionary(Of String, Boolean)()]" />
+    </Sequence.Variables>
+
+    <!-- 1. Rozpoznanie klienta po prefiksie nazwy pliku -->
+    <Assign DisplayName="Nazwa pliku" sap2010:WorkflowViewState.IdRef="Assign_1">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[strNazwaPliku]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[Path.GetFileName(in_SciezkaPliku)]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="Prefiks pliku (tekst przed _)" sap2010:WorkflowViewState.IdRef="Assign_2">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[strPrefiks]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[strNazwaPliku.Split("_"c)(0)]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="Znajdź konfigurację pliku" sap2010:WorkflowViewState.IdRef="Assign_3">
+      <Assign.To><OutArgument x:TypeArguments="scg:List(sd:DataRow)">[listKonfigPliku]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="scg:List(sd:DataRow)">[in_dtPliki.Select("PrefiksPliku = '" &amp; strPrefiks.Replace("'", "''") &amp; "'").ToList()]</InArgument></Assign.Value>
+    </Assign>
+    <If DisplayName="Czy klient jest w konfiguracji?" sap2010:WorkflowViewState.IdRef="If_1">
+      <If.Condition><InArgument x:TypeArguments="x:Boolean">[listKonfigPliku.Count = 0]</InArgument></If.Condition>
+      <If.Then>
+        <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_2">
+          <Throw DisplayName="Nieznany klient" sap2010:WorkflowViewState.IdRef="Throw_1">
+            <Throw.Exception><InArgument x:TypeArguments="s:Exception">[New Exception("Nieznany klient (prefiks pliku: " &amp; strPrefiks &amp; ")")]</InArgument></Throw.Exception>
+          </Throw>
+        </Sequence>
+      </If.Then>
+    </If>
+    <Assign DisplayName="Klient" sap2010:WorkflowViewState.IdRef="Assign_4">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[strKlient]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[listKonfigPliku(0)("Klient").ToString.Trim]</InArgument></Assign.Value>
+    </Assign>
+
+    <!-- 2. Odczyt pliku (arkusz i komórka startowa z konfiguracji) -->
+    <ui:ReadRange DisplayName="Read Range Workbook - plik klienta" sap2010:WorkflowViewState.IdRef="ReadRange_1" AddHeaders="True" WorkbookPath="[in_SciezkaPliku]" SheetName="[listKonfigPliku(0)(&quot;Arkusz&quot;).ToString]" Range="[listKonfigPliku(0)(&quot;KomorkaStart&quot;).ToString]" DataTable="[dtWe]" />
+
+    <!-- 3. Mapowanie kolumn klienta na wspólny format -->
+    <ui:ForEach x:TypeArguments="sd:DataRow" DisplayName="Zmień nazwy kolumn na wspólny format" sap2010:WorkflowViewState.IdRef="ForEach`1_1">
+      <ui:ForEach.Values>
+        <InArgument x:TypeArguments="sc:IEnumerable">[in_dtKolumny.Select("Klient = '" &amp; strKlient.Replace("'", "''") &amp; "'")]</InArgument>
+      </ui:ForEach.Values>
+      <ui:ForEach.Body>
+        <ActivityAction x:TypeArguments="sd:DataRow">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="sd:DataRow" Name="mapa" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_3">
+            <If DisplayName="Czy kolumna istnieje w pliku?" sap2010:WorkflowViewState.IdRef="If_2">
+              <If.Condition><InArgument x:TypeArguments="x:Boolean">[Not dtWe.Columns.Contains(mapa("KolumnaKlienta").ToString.Trim)]</InArgument></If.Condition>
+              <If.Then>
+                <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_4">
+                  <Throw DisplayName="Brak kolumny" sap2010:WorkflowViewState.IdRef="Throw_2">
+                    <Throw.Exception><InArgument x:TypeArguments="s:Exception">[New Exception("Brak kolumny '" &amp; mapa("KolumnaKlienta").ToString.Trim &amp; "' w pliku")]</InArgument></Throw.Exception>
+                  </Throw>
+                </Sequence>
+              </If.Then>
+            </If>
+            <Assign DisplayName="Zmień nazwę kolumny" sap2010:WorkflowViewState.IdRef="Assign_5">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[dtWe.Columns(mapa("KolumnaKlienta").ToString.Trim).ColumnName]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[mapa("PoleWspolne").ToString.Trim]</InArgument></Assign.Value>
+            </Assign>
+          </Sequence>
+        </ActivityAction>
+      </ui:ForEach.Body>
+    </ui:ForEach>
+
+    <Assign DisplayName="Pusta tabela SAP dla pliku" sap2010:WorkflowViewState.IdRef="Assign_6">
+      <Assign.To><OutArgument x:TypeArguments="sd:DataTable">[dtSapPlik]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="sd:DataTable">[in_dtSapWzor.Clone()]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="Pusta tabela błędów dla pliku" sap2010:WorkflowViewState.IdRef="Assign_7">
+      <Assign.To><OutArgument x:TypeArguments="sd:DataTable">[dtBledyPlik]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="sd:DataTable">[in_dtBledyWzor.Clone()]</InArgument></Assign.Value>
+    </Assign>
+
+    <!-- 4. Walidacja, mapowanie indeksów, duplikaty -->
+    <ui:ForEachRow DisplayName="For Each Row - walidacja wierszy" sap2010:WorkflowViewState.IdRef="ForEachRow_1" DataTable="[dtWe]">
+      <ui:ForEachRow.Body>
+        <ActivityAction x:TypeArguments="sd:DataRow">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="sd:DataRow" Name="CurrentRow" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_5">
+            <Sequence.Variables>
+              <Variable x:TypeArguments="x:String" Name="strNr" />
+              <Variable x:TypeArguments="x:String" Name="strIndeks" />
+              <Variable x:TypeArguments="x:String" Name="strIlosc" />
+              <Variable x:TypeArguments="x:String" Name="strData" />
+              <Variable x:TypeArguments="x:String" Name="strPowod" />
+              <Variable x:TypeArguments="x:Decimal" Name="decIlosc" />
+            </Sequence.Variables>
+            <Assign DisplayName="Nr zamówienia" sap2010:WorkflowViewState.IdRef="Assign_8">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[strNr]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[CurrentRow("NrZamowienia").ToString.Trim]</InArgument></Assign.Value>
+            </Assign>
+            <Assign DisplayName="Indeks klienta" sap2010:WorkflowViewState.IdRef="Assign_9">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[strIndeks]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[CurrentRow("IndeksKlienta").ToString.Trim]</InArgument></Assign.Value>
+            </Assign>
+            <Assign DisplayName="Ilość (tekst)" sap2010:WorkflowViewState.IdRef="Assign_10">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[strIlosc]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[CurrentRow("Ilosc").ToString.Trim]</InArgument></Assign.Value>
+            </Assign>
+            <Assign DisplayName="Data dostawy (jeśli klient ją podaje)" sap2010:WorkflowViewState.IdRef="Assign_11">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[strData]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[If(Not dtWe.Columns.Contains("DataDostawy"), "", If(TypeOf CurrentRow("DataDostawy") Is DateTime, CDate(CurrentRow("DataDostawy")).ToString("yyyy-MM-dd"), CurrentRow("DataDostawy").ToString.Trim))]</InArgument></Assign.Value>
+            </Assign>
+            <Assign DisplayName="Powód błędu = pusty" sap2010:WorkflowViewState.IdRef="Assign_12">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[String.Empty]</InArgument></Assign.Value>
+            </Assign>
+            <If DisplayName="Pomiń pusty wiersz" sap2010:WorkflowViewState.IdRef="If_3">
+              <If.Condition><InArgument x:TypeArguments="x:Boolean">[Not (String.IsNullOrEmpty(strNr) AndAlso String.IsNullOrEmpty(strIndeks) AndAlso String.IsNullOrEmpty(strIlosc))]</InArgument></If.Condition>
+              <If.Then>
+                <Sequence DisplayName="Waliduj wiersz" sap2010:WorkflowViewState.IdRef="Sequence_6">
+                  <If DisplayName="Reguła: numer zamówienia" sap2010:WorkflowViewState.IdRef="If_4">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso String.IsNullOrEmpty(strNr)]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_7">
+                        <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_13">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">["Brak numeru zamówienia"]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                  </If>
+                  <If DisplayName="Reguła: indeks produktu" sap2010:WorkflowViewState.IdRef="If_5">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso String.IsNullOrEmpty(strIndeks)]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_8">
+                        <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_14">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">["Brak indeksu produktu"]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                  </If>
+                  <If DisplayName="Reguła: ilość jest liczbą" sap2010:WorkflowViewState.IdRef="If_6">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso Not Decimal.TryParse(strIlosc, NumberStyles.Number, CultureInfo.InvariantCulture, decIlosc)]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_9">
+                        <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_15">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">["Ilość nie jest liczbą"]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                  </If>
+                  <If DisplayName="Reguła: ilość &gt; 0" sap2010:WorkflowViewState.IdRef="If_7">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso Decimal.Parse(strIlosc, NumberStyles.Number, CultureInfo.InvariantCulture) &lt;= 0]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_10">
+                        <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_16">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">["Ilość musi być większa od 0"]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                  </If>
+                  <If DisplayName="Reguła: mapowanie indeksu" sap2010:WorkflowViewState.IdRef="If_8">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso Not in_dictIndeksy.ContainsKey(strKlient &amp; "|" &amp; strIndeks)]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_11">
+                        <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_17">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">["Brak mapowania indeksu " &amp; strIndeks]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                  </If>
+                  <If DisplayName="Reguła: duplikat zamówienia" sap2010:WorkflowViewState.IdRef="If_9">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso (in_dictPrzetworzone.ContainsKey(strNr) OrElse dictWPliku.ContainsKey(strNr))]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_12">
+                        <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_18">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">["Duplikat zamówienia"]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                  </If>
+
+                  <If DisplayName="Wiersz poprawny?" sap2010:WorkflowViewState.IdRef="If_10">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = ""]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Gotowe do SAP" sap2010:WorkflowViewState.IdRef="Sequence_13">
+                        <Assign DisplayName="Ilość (liczba)" sap2010:WorkflowViewState.IdRef="Assign_19">
+                          <Assign.To><OutArgument x:TypeArguments="x:Decimal">[decIlosc]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:Decimal">[Decimal.Parse(strIlosc, NumberStyles.Number, CultureInfo.InvariantCulture)]</InArgument></Assign.Value>
+                        </Assign>
+                        <uic:AddDataRow DisplayName="Add Data Row - SAP" sap2010:WorkflowViewState.IdRef="AddDataRow_1">
+                          <uic:AddDataRow.DataTable>
+                            <InOutArgument x:TypeArguments="sd:DataTable">[dtSapPlik]</InOutArgument>
+                          </uic:AddDataRow.DataTable>
+                          <uic:AddDataRow.ArrayRow>
+                            <InArgument x:TypeArguments="s:Object[]">[New Object() {strNr, strKlient, strIndeks, in_dictIndeksy(strKlient &amp; "|" &amp; strIndeks), decIlosc.ToString(CultureInfo.InvariantCulture), strData, strNazwaPliku}]</InArgument>
+                          </uic:AddDataRow.ArrayRow>
+                        </uic:AddDataRow>
+                        <Assign DisplayName="Zapamiętaj numer (duplikaty w pliku)" sap2010:WorkflowViewState.IdRef="Assign_20">
+                          <Assign.To><OutArgument x:TypeArguments="x:Boolean">[dictWPliku(strNr)]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:Boolean">[True]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                    <If.Else>
+                      <Sequence DisplayName="Do raportu błędów" sap2010:WorkflowViewState.IdRef="Sequence_14">
+                        <uic:AddDataRow DisplayName="Add Data Row - błąd" sap2010:WorkflowViewState.IdRef="AddDataRow_2">
+                          <uic:AddDataRow.DataTable>
+                            <InOutArgument x:TypeArguments="sd:DataTable">[dtBledyPlik]</InOutArgument>
+                          </uic:AddDataRow.DataTable>
+                          <uic:AddDataRow.ArrayRow>
+                            <InArgument x:TypeArguments="s:Object[]">[New Object() {strNazwaPliku, strKlient, strNr, strIndeks, strIlosc, strPowod}]</InArgument>
+                          </uic:AddDataRow.ArrayRow>
+                        </uic:AddDataRow>
+                        <ui:LogMessage Level="Warn" DisplayName="Log - błędny wiersz" sap2010:WorkflowViewState.IdRef="LogMessage_1">
+                          <ui:LogMessage.Message>
+                            <InArgument x:TypeArguments="x:Object">[strNazwaPliku &amp; " | " &amp; strNr &amp; ": " &amp; strPowod]</InArgument>
+                          </ui:LogMessage.Message>
+                        </ui:LogMessage>
+                      </Sequence>
+                    </If.Else>
+                  </If>
+                </Sequence>
+              </If.Then>
+            </If>
+          </Sequence>
+        </ActivityAction>
+      </ui:ForEachRow.Body>
+    </ui:ForEachRow>
+
+    <!-- 5. Wyniki pliku (Main dołączy je dopiero, gdy cały plik się uda) -->
+    <Assign DisplayName="out_dtSapPlik" sap2010:WorkflowViewState.IdRef="Assign_21">
+      <Assign.To><OutArgument x:TypeArguments="sd:DataTable">[out_dtSapPlik]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="sd:DataTable">[dtSapPlik]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="out_dtBledyPlik" sap2010:WorkflowViewState.IdRef="Assign_22">
+      <Assign.To><OutArgument x:TypeArguments="sd:DataTable">[out_dtBledyPlik]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="sd:DataTable">[dtBledyPlik]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="out_Klient" sap2010:WorkflowViewState.IdRef="Assign_23">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[out_Klient]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[strKlient]</InArgument></Assign.Value>
+    </Assign>
+  </Sequence>
+</Activity>
