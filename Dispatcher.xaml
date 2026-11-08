@@ -50,6 +50,7 @@
       <Variable x:TypeArguments="sd:DataTable" Name="dtBledyWzor" />
       <Variable x:TypeArguments="sd:DataTable" Name="dtBledy" />
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Default="[New Dictionary(Of String, String)()]" Name="dictIndeksy" />
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Default="[New Dictionary(Of String, String)()]" Name="dictPrzeliczniki" />
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:Boolean)" Default="[New Dictionary(Of String, Boolean)()]" Name="dictPrzetworzone" />
     </Sequence.Variables>
     <sap:WorkflowViewStateService.ViewState>
@@ -160,10 +161,16 @@
           <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_4">
             <If Condition="[Not String.IsNullOrWhiteSpace(CurrentRow(&quot;IndeksKlienta&quot;).ToString)]" DisplayName="Czy wiersz niepusty?" sap2010:WorkflowViewState.IdRef="If_3">
               <If.Then>
-                <Assign DisplayName="Dodaj do słownika" sap2010:WorkflowViewState.IdRef="Assign_5">
-                  <Assign.To><OutArgument x:TypeArguments="x:String">[dictIndeksy(CurrentRow("Klient").ToString.Trim &amp; "|" &amp; CurrentRow("IndeksKlienta").ToString.Trim)]</OutArgument></Assign.To>
-                  <Assign.Value><InArgument x:TypeArguments="x:String">[CurrentRow("IndeksWewnetrzny").ToString.Trim]</InArgument></Assign.Value>
-                </Assign>
+                <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_10">
+                  <Assign DisplayName="Dodaj do słownika" sap2010:WorkflowViewState.IdRef="Assign_5">
+                    <Assign.To><OutArgument x:TypeArguments="x:String">[dictIndeksy(CurrentRow("Klient").ToString.Trim &amp; "|" &amp; CurrentRow("IndeksKlienta").ToString.Trim)]</OutArgument></Assign.To>
+                    <Assign.Value><InArgument x:TypeArguments="x:String">[CurrentRow("IndeksWewnetrzny").ToString.Trim]</InArgument></Assign.Value>
+                  </Assign>
+                  <Assign DisplayName="Dodaj do słownika przeliczników (kolumna Przelicznik, opcjonalna)" sap2010:WorkflowViewState.IdRef="Assign_16">
+                    <Assign.To><OutArgument x:TypeArguments="x:String">[dictPrzeliczniki(CurrentRow("Klient").ToString.Trim &amp; "|" &amp; CurrentRow("IndeksKlienta").ToString.Trim)]</OutArgument></Assign.To>
+                    <Assign.Value><InArgument x:TypeArguments="x:String">[If(dtMapowanie.Columns.Contains("Przelicznik"), CurrentRow("Przelicznik").ToString.Trim, String.Empty)]</InArgument></Assign.Value>
+                  </Assign>
+                </Sequence>
               </If.Then>
             </If>
           </Sequence>
@@ -210,6 +217,7 @@
                       <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_dtSapPlik">[dtSapPlik]</OutArgument>
                       <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_dtBledyPlik">[dtBledyPlik]</OutArgument>
                       <OutArgument x:TypeArguments="x:String" x:Key="out_Klient">[strKlient]</OutArgument>
+                      <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_dictPrzeliczniki">[dictPrzeliczniki]</InArgument>
                     </ui:InvokeWorkflowFile.Arguments>
                   </ui:InvokeWorkflowFile>
 

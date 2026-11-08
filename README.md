@@ -36,15 +36,16 @@ Robot odczytuje cztery arkusze z folderu `Config/`:
 
 | Plik | Arkusz | Kolumny | Przeznaczenie |
 |------|--------|---------|---------------|
-| `Konfiguracja_klientow.xlsx` | `Pliki` | PrefiksPliku, Klient, Arkusz, KomorkaStart | Mapowanie prefiksu nazwy pliku na klienta i lokalizację danych w pliku |
+| `Konfiguracja_klientow.xlsx` | `Pliki` | PrefiksPliku, Klient, Arkusz, KomorkaStart, JednostkaZamowienia (opcjonalna) | Mapowanie prefiksu nazwy pliku na klienta i lokalizację danych w pliku. `JednostkaZamowienia`: `szt` (domyślnie, także gdy kolumny brak) lub `karton`; inna wartość = cały plik do `Error/` |
 | `Konfiguracja_klientow.xlsx` | `Kolumny` | Klient, KolumnaKlienta, PoleWspolne | Tłumaczenie nazw kolumn klienta na nazwy kanoniczne |
-| `Mapowanie_indeksow.xlsx` | `Mapowanie` | Klient, IndeksKlienta, IndeksWewnetrzny | Mapowanie indeksu klienta na wewnętrzny indeks SAP |
+| `Mapowanie_indeksow.xlsx` | `Mapowanie` | Klient, IndeksKlienta, IndeksWewnetrzny, Przelicznik (opcjonalna) | Mapowanie indeksu klienta na wewnętrzny indeks SAP. `Przelicznik` — liczba sztuk w kartonie (pusty = 1), używany tylko dla klientów z `JednostkaZamowienia = karton` |
 | `Konfiguracja_klientow.xlsx` | `Ustawienia` (opcjonalny) | Klucz, Wartosc | Ustawienia ogólne. `ZnacznikKorekty` — dopisek w nazwie pliku oznaczający korektę zamówienia (domyślnie `_korekta`, gdy arkusza brak — robot loguje ostrzeżenie) |
 | `Przetworzone_zamowienia.xlsx` | `Przetworzone` | NrZamowienia, Klient, DataPrzetworzenia | Historia przetworzonych zamówień (ochrona przed duplikatami między uruchomieniami) |
 
 #### 3. Budowanie słowników
 
 - `dictIndeksy` — klucz złożony `"Klient|IndeksKlienta"` → `IndeksWewnetrzny`
+- `dictPrzeliczniki` — klucz `"Klient|IndeksKlienta"` → `Przelicznik` (tekst z arkusza; pusty, gdy kolumny brak)
 - `dictPrzetworzone` — `NrZamowienia` → `True`; zasilany historią z poprzednich uruchomień
 
 #### 4. Przetwarzanie plików z folderu Input
@@ -110,6 +111,8 @@ Kolumny z pliku klienta są przemianowywane na nazwy kanoniczne:
 3. `Ilosc` musi dać się sparsować jako liczba dziesiętna
 4. `Ilosc` musi być większa od 0
 5. Klucz `Klient|IndeksKlienta` musi istnieć w słowniku indeksów
+5a. Klient zamawiający w kartonach (`JednostkaZamowienia = karton`): `Przelicznik` indeksu musi być pusty (= 1) albo liczbą > 0,
+    inaczej powód `Nieprawidłowy przelicznik '<wartość>' dla indeksu <indeks> (karton → szt.) w Mapowanie_indeksow.xlsx`
 6. `NrZamowienia` nie może być duplikatem (historia + bieżące uruchomienie + bieżący plik) — wyjątek: plik korekty (patrz *Korekta zamówienia*)
 
 Wiersz prawidłowy → tabela SAP. Wiersz błędny → tabela błędów z polem `Powod`.
@@ -126,7 +129,7 @@ Wiersz prawidłowy → tabela SAP. Wiersz błędny → tabela błędów z polem 
 | Klient | Nazwa klienta z konfiguracji |
 | IndeksKlienta | Indeks klienta |
 | IndeksWewnetrzny | Zmapowany indeks wewnętrzny SAP |
-| Ilosc | Ilość (string, InvariantCulture) |
+| Ilosc | Ilość w sztukach (string, InvariantCulture); dla klienta `karton`: ilość z pliku × `Przelicznik` (np. 10 kartonów × 24 = 240) |
 | DataDostawy | Data dostawy yyyy-MM-dd lub puste |
 | PlikZrodlowy | Nazwa pliku źródłowego |
 
@@ -138,7 +141,7 @@ Wiersz prawidłowy → tabela SAP. Wiersz błędny → tabela błędów z polem 
 | Klient | Nazwa klienta |
 | NrZamowienia | Numer zamówienia (może być puste) |
 | IndeksKlienta | Indeks klienta (może być puste) |
-| Ilosc | Surowa wartość ilości |
+| Ilosc | Surowa wartość ilości z pliku klienta (w jednostce klienta, np. kartony) |
 | Powod | Przyczyna odrzucenia lub `CAŁY PLIK: <komunikat>` |
 
 ---

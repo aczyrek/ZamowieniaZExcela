@@ -25,6 +25,7 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <x:Property Name="out_Klient" Type="OutArgument(x:String)" />
     <x:Property Name="in_ZnacznikKorekty" Type="InArgument(x:String)" />
     <x:Property Name="in_dictWyslaneWUruchomieniu" Type="InArgument(scg:Dictionary(x:String, x:String))" />
+    <x:Property Name="in_dictPrzeliczniki" Type="InArgument(scg:Dictionary(x:String, x:String))" />
   </x:Members>
   <TextExpression.NamespacesForImplementation>
     <sco:Collection x:TypeArguments="x:String">
@@ -76,6 +77,10 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Name="dictWyslane" />
       <Variable x:TypeArguments="x:Boolean" Name="boolKorekta" />
       <Variable x:TypeArguments="x:String" Name="strSlowoAnulowania" Default="ANULUJ" />
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Name="dictPrzeliczniki" />
+      <Variable x:TypeArguments="x:String" Name="strJednostkaZamowienia" />
+      <Variable x:TypeArguments="x:String" Name="strJednostkaSztuki" Default="szt" />
+      <Variable x:TypeArguments="x:String" Name="strJednostkaKarton" Default="karton" />
     </Sequence.Variables>
 
     <!-- 1. Rozpoznanie klienta po prefiksie nazwy pliku -->
@@ -113,6 +118,28 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
       <Assign.To><OutArgument x:TypeArguments="x:String">[strKlient]</OutArgument></Assign.To>
       <Assign.Value><InArgument x:TypeArguments="x:String">[listKonfigPliku(0)("Klient").ToString.Trim]</InArgument></Assign.Value>
     </Assign>
+    <Assign DisplayName="Przeliczniki jednostek z mapowania indeksów (pusty słownik, jeśli nie podano)" sap2010:WorkflowViewState.IdRef="Assign_33">
+      <Assign.To><OutArgument x:TypeArguments="scg:Dictionary(x:String, x:String)">[dictPrzeliczniki]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)">[If(in_dictPrzeliczniki, New Dictionary(Of String, String)())]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="Jednostka zamówienia klienta (kolumna JednostkaZamowienia w Pliki)" sap2010:WorkflowViewState.IdRef="Assign_34">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[strJednostkaZamowienia]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[If(in_dtPliki.Columns.Contains("JednostkaZamowienia"), listKonfigPliku(0)("JednostkaZamowienia").ToString.Trim.ToLowerInvariant, String.Empty)]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="Jednostka zamówienia — domyślnie sztuki, gdy nie podano" sap2010:WorkflowViewState.IdRef="Assign_35">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[strJednostkaZamowienia]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[If(String.IsNullOrWhiteSpace(strJednostkaZamowienia), strJednostkaSztuki, strJednostkaZamowienia)]</InArgument></Assign.Value>
+    </Assign>
+    <If DisplayName="Czy jednostka zamówienia jest znana (szt / karton)?" sap2010:WorkflowViewState.IdRef="If_17">
+      <If.Condition><InArgument x:TypeArguments="x:Boolean">[strJednostkaZamowienia &lt;&gt; strJednostkaSztuki AndAlso strJednostkaZamowienia &lt;&gt; strJednostkaKarton]</InArgument></If.Condition>
+      <If.Then>
+        <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_21">
+          <Throw DisplayName="Nieznana jednostka zamówienia" sap2010:WorkflowViewState.IdRef="Throw_3">
+            <Throw.Exception><InArgument x:TypeArguments="s:Exception">[New Exception("Nieznana jednostka zamówienia '" &amp; strJednostkaZamowienia &amp; "' dla klienta " &amp; strKlient &amp; " (dozwolone: " &amp; strJednostkaSztuki &amp; ", " &amp; strJednostkaKarton &amp; ")")]</InArgument></Throw.Exception>
+          </Throw>
+        </Sequence>
+      </If.Then>
+    </If>
 
     <!-- 2. Odczyt pliku (arkusz i komórka startowa z konfiguracji) -->
     <ui:ReadRange DisplayName="Read Range Workbook - plik klienta" sap2010:WorkflowViewState.IdRef="ReadRange_1" AddHeaders="True" WorkbookPath="[in_SciezkaPliku]" SheetName="[listKonfigPliku(0)(&quot;Arkusz&quot;).ToString]" Range="[listKonfigPliku(0)(&quot;KomorkaStart&quot;).ToString]" DataTable="[dtWe]" />
@@ -174,6 +201,8 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
               <Variable x:TypeArguments="s:DateTime" Name="dtDataDostawy" />
               <Variable x:TypeArguments="x:String" Name="strPlikOryginalu" />
               <Variable x:TypeArguments="x:String" Name="strUwagi" />
+              <Variable x:TypeArguments="x:String" Name="strPrzelicznik" />
+              <Variable x:TypeArguments="x:Decimal" Name="decPrzelicznik" />
             </Sequence.Variables>
             <Assign DisplayName="Nr zamówienia" sap2010:WorkflowViewState.IdRef="Assign_8">
               <Assign.To><OutArgument x:TypeArguments="x:String">[strNr]</OutArgument></Assign.To>
@@ -295,6 +324,59 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
                       </Sequence>
                     </If.Then>
                   </If>
+                  <If DisplayName="Reguła: przelicznik kartonu na sztuki (klient zamawia w kartonach)" sap2010:WorkflowViewState.IdRef="If_18">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso strJednostkaZamowienia = strJednostkaKarton]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_22">
+                        <Assign DisplayName="Przelicznik z mapowania (tekst)" sap2010:WorkflowViewState.IdRef="Assign_36">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPrzelicznik]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">[If(dictPrzeliczniki.ContainsKey(strKlient &amp; "|" &amp; strIndeks), dictPrzeliczniki(strKlient &amp; "|" &amp; strIndeks), String.Empty)]</InArgument></Assign.Value>
+                        </Assign>
+                        <If DisplayName="Czy przelicznik jest pusty? (domyślnie 1)" sap2010:WorkflowViewState.IdRef="If_19">
+                          <If.Condition><InArgument x:TypeArguments="x:Boolean">[String.IsNullOrWhiteSpace(strPrzelicznik)]</InArgument></If.Condition>
+                          <If.Then>
+                            <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_23">
+                              <Assign DisplayName="Przelicznik = 1" sap2010:WorkflowViewState.IdRef="Assign_37">
+                                <Assign.To><OutArgument x:TypeArguments="x:Decimal">[decPrzelicznik]</OutArgument></Assign.To>
+                                <Assign.Value><InArgument x:TypeArguments="x:Decimal">[1D]</InArgument></Assign.Value>
+                              </Assign>
+                            </Sequence>
+                          </If.Then>
+                          <If.Else>
+                            <Sequence DisplayName="Else" sap2010:WorkflowViewState.IdRef="Sequence_24">
+                              <If DisplayName="Czy przelicznik jest liczbą większą od 0?" sap2010:WorkflowViewState.IdRef="If_20">
+                                <If.Condition><InArgument x:TypeArguments="x:Boolean">[Not (Decimal.TryParse(strPrzelicznik, NumberStyles.Number, CultureInfo.InvariantCulture, Nothing) AndAlso Decimal.Parse(strPrzelicznik, NumberStyles.Number, CultureInfo.InvariantCulture) &gt; 0)]</InArgument></If.Condition>
+                                <If.Then>
+                                  <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_25">
+                                    <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_38">
+                                      <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+                                      <Assign.Value><InArgument x:TypeArguments="x:String">["Nieprawidłowy przelicznik '" &amp; strPrzelicznik &amp; "' dla indeksu " &amp; strIndeks &amp; " (karton → szt.) w Mapowanie_indeksow.xlsx"]</InArgument></Assign.Value>
+                                    </Assign>
+                                  </Sequence>
+                                </If.Then>
+                                <If.Else>
+                                  <Sequence DisplayName="Else" sap2010:WorkflowViewState.IdRef="Sequence_27">
+                                    <Assign DisplayName="Przelicznik (liczba)" sap2010:WorkflowViewState.IdRef="Assign_40">
+                                      <Assign.To><OutArgument x:TypeArguments="x:Decimal">[decPrzelicznik]</OutArgument></Assign.To>
+                                      <Assign.Value><InArgument x:TypeArguments="x:Decimal">[Decimal.Parse(strPrzelicznik, NumberStyles.Number, CultureInfo.InvariantCulture)]</InArgument></Assign.Value>
+                                    </Assign>
+                                  </Sequence>
+                                </If.Else>
+                              </If>
+                            </Sequence>
+                          </If.Else>
+                        </If>
+                      </Sequence>
+                    </If.Then>
+                    <If.Else>
+                      <Sequence DisplayName="Else" sap2010:WorkflowViewState.IdRef="Sequence_26">
+                        <Assign DisplayName="Przelicznik = 1 (klient zamawia w sztukach)" sap2010:WorkflowViewState.IdRef="Assign_39">
+                          <Assign.To><OutArgument x:TypeArguments="x:Decimal">[decPrzelicznik]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:Decimal">[1D]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Else>
+                  </If>
                   <If DisplayName="Reguła: korekta zamówienia z tego uruchomienia — zastąp pozycje oryginału" sap2010:WorkflowViewState.IdRef="If_13">
                     <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso boolKorekta AndAlso Not dictWPliku.ContainsKey(strNr) AndAlso dictWyslane.ContainsKey(strKlient &amp; "|" &amp; strNr)]</InArgument></If.Condition>
                     <If.Then>
@@ -333,9 +415,9 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
                     <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = ""]</InArgument></If.Condition>
                     <If.Then>
                       <Sequence DisplayName="Gotowe do SAP" sap2010:WorkflowViewState.IdRef="Sequence_13">
-                        <Assign DisplayName="Ilość (liczba)" sap2010:WorkflowViewState.IdRef="Assign_19">
+                        <Assign DisplayName="Ilość w sztukach do SAP (ilość × przelicznik jednostki)" sap2010:WorkflowViewState.IdRef="Assign_19">
                           <Assign.To><OutArgument x:TypeArguments="x:Decimal">[decIlosc]</OutArgument></Assign.To>
-                          <Assign.Value><InArgument x:TypeArguments="x:Decimal">[Decimal.Parse(strIlosc, NumberStyles.Number, CultureInfo.InvariantCulture)]</InArgument></Assign.Value>
+                          <Assign.Value><InArgument x:TypeArguments="x:Decimal">[Decimal.Parse(strIlosc, NumberStyles.Number, CultureInfo.InvariantCulture) * decPrzelicznik]</InArgument></Assign.Value>
                         </Assign>
                         <uic:AddDataRow DisplayName="Add Data Row - SAP" sap2010:WorkflowViewState.IdRef="AddDataRow_1">
                           <uic:AddDataRow.DataTable>

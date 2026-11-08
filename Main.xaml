@@ -50,6 +50,7 @@
       <Variable x:TypeArguments="sd:DataTable" Name="dtBledy" />
       <Variable x:TypeArguments="sd:DataTable" Name="dtNoweHist" />
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Default="[New Dictionary(Of String, String)()]" Name="dictIndeksy" />
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Default="[New Dictionary(Of String, String)()]" Name="dictPrzeliczniki" />
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:Boolean)" Default="[New Dictionary(Of String, Boolean)()]" Name="dictPrzetworzone" />
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Default="[New Dictionary(Of String, String)()]" Name="dictWyslaneWUruchomieniu" />
       <Variable x:TypeArguments="sd:DataTable" Name="dtUstawienia" />
@@ -180,6 +181,14 @@
                       <InArgument x:TypeArguments="x:String">[CurrentRow("IndeksWewnetrzny").ToString.Trim]</InArgument>
                     </Assign.Value>
                   </Assign>
+                  <Assign DisplayName="Dodaj do słownika przeliczników (kolumna Przelicznik, opcjonalna)" sap2010:WorkflowViewState.IdRef="Assign_11">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="x:String">[dictPrzeliczniki(CurrentRow("Klient").ToString.Trim &amp; "|" &amp; CurrentRow("IndeksKlienta").ToString.Trim)]</OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="x:String">[If(dtMapowanie.Columns.Contains("Przelicznik"), CurrentRow("Przelicznik").ToString.Trim, String.Empty)]</InArgument>
+                    </Assign.Value>
+                  </Assign>
                 </Sequence>
               </If.Then>
             </If>
@@ -259,6 +268,7 @@
                       <OutArgument x:TypeArguments="x:String" x:Key="out_Klient">[strKlient]</OutArgument>
                       <InArgument x:TypeArguments="x:String" x:Key="in_ZnacznikKorekty">[strZnacznikKorekty]</InArgument>
                       <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_dictWyslaneWUruchomieniu">[dictWyslaneWUruchomieniu]</InArgument>
+                      <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_dictPrzeliczniki">[dictPrzeliczniki]</InArgument>
                     </ui:InvokeWorkflowFile.Arguments>
                   </ui:InvokeWorkflowFile>
                   <ui:MoveFile ContinueOnError="{x:Null}" DestinationResource="{x:Null}" PathResource="{x:Null}" Destination="[Path.Combine(strFolder, &quot;Processed&quot;, strNazwaPliku)]" DisplayName="Move File - do Processed" sap2010:WorkflowViewState.IdRef="MoveFile_1" Overwrite="True" Path="[strSciezka]" />
