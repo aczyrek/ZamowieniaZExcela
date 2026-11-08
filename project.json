@@ -42,7 +42,29 @@
     "processOptions": {
       "ignoredFiles": []
     },
-    "fileInfoCollection": [],
+    "fileInfoCollection": [
+      {
+        "editingStatus": "InProgress",
+        "testCaseId": "a1b2c3d4-0001-4000-8000-000000000001",
+        "testCaseType": "TestCase",
+        "executionTemplateInvokeIsolated": false,
+        "fileName": "Test_PrzetworzPlik_PoprawnyWiersz.xaml"
+      },
+      {
+        "editingStatus": "InProgress",
+        "testCaseId": "a1b2c3d4-0002-4000-8000-000000000002",
+        "testCaseType": "TestCase",
+        "executionTemplateInvokeIsolated": false,
+        "fileName": "Test_PrzetworzPlik_BrakNumeruZamowienia.xaml"
+      },
+      {
+        "editingStatus": "InProgress",
+        "testCaseId": "a1b2c3d4-0003-4000-8000-000000000003",
+        "testCaseType": "TestCase",
+        "executionTemplateInvokeIsolated": false,
+        "fileName": "Test_PrzetworzPlik_DataDostawy.xaml"
+      }
+    ],
     "saveToCloud": false
   },
   "expressionLanguage": "VisualBasic",
@@ -50,6 +72,18 @@
     {
       "filePath": "Main.xaml",
       "uniqueId": "9296a623-e3dc-4249-91ff-9214d4b66001",
+      "input": [],
+      "output": []
+    },
+    {
+      "filePath": "Dispatcher.xaml",
+      "uniqueId": "b5c6d7e8-0001-4000-8000-000000000010",
+      "input": [],
+      "output": []
+    },
+    {
+      "filePath": "Performer.xaml",
+      "uniqueId": "b5c6d7e8-0002-4000-8000-000000000011",
       "input": [],
       "output": []
     }

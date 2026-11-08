@@ -1,0 +1,37 @@
+{
+  "version": "2.0",
+  "resources": [
+    {
+      "activityDisplayName": "Get Asset - FolderRoboczy",
+      "activityId": "GetRobotAsset_1",
+      "resource": "asset",
+      "key": "FolderRoboczy",
+      "id": "assetFolderRoboczyFolderRoboczyFalse",
+      "value": {
+        "name": {
+          "defaultValue": "FolderRoboczy",
+          "isExpression": false
+        }
+      },
+      "metadata": {
+        "BindingsVersion": "2.2"
+      }
+    },
+    {
+      "activityDisplayName": "Get Asset - NazwaKolejki",
+      "activityId": "GetRobotAsset_2",
+      "resource": "asset",
+      "key": "NazwaKolejki",
+      "id": "assetNazwaKolejkiNazwaKolejkiFalse",
+      "value": {
+        "name": {
+          "defaultValue": "NazwaKolejki",
+          "isExpression": false
+        }
+      },
+      "metadata": {
+        "BindingsVersion": "2.2"
+      }
+    }
+  ]
+}
