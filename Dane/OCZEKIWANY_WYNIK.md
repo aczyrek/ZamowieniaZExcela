@@ -14,12 +14,11 @@ Wynik uruchomienia robota na **wszystkich 5 plikach testowych** (świeża histor
 | Wynik | Bez KL005 | Z KL005 (docelowo) |
 |---|---|---|
 | Gotowe do SAP | 8 | **11** |
-| Raport błędów | 9* | **9*** |
+| Raport błędów | 11* | **11*** |
 
-\* Przy **świeżej** historii (`Przetworzone_zamowienia.xlsx` bez wpisów historycznych): 9 błędów.
-Przy historii z wpisem `EL-6999` (z wcześniejszego uruchomienia): 10 błędów — EL-6999 pojawia się
-jako duplikat. Liczba podana w zadaniu (9 → 10) zakładała zachowanie historii; uruchomienie
-na czystej historii daje 9 → 9 (bez KL005) → bez zmian dla istniejących, +1 KL005 = 9 łącznie.
+\* Po dodaniu walidacji daty dostawy (zadanie 3): +2 nowe błędy w Budmat (BUD-1006 brak daty,
+BUD-1007 data w przeszłości). Raport rośnie z 9 do 11 przy świeżej historii.
+Przy historii z wpisem `EL-6999` dochodzi 12. wiersz: `Duplikat zamówienia`.
 
 ---
 
@@ -41,13 +40,15 @@ na czystej historii daje 9 → 9 (bez KL005) → bez zmian dla istniejących, +1
 
 ---
 
-## Raport błędów — 10 wierszy
+## Raport błędów — 11 wierszy
 
 | PlikZrodlowy | Klient | NrZamowienia | IndeksKlienta | Ilosc | Powod |
 |---|---|---|---|---|---|
 | Budmat_zamowienia_2026-11-03.xlsx | Budmat  | BUD-1003   |        | 30  | Brak indeksu produktu |
 | Budmat_zamowienia_2026-11-03.xlsx | Budmat  | BUD-1004   | BM-310 | 0   | Ilość musi być większa od 0 |
 | Budmat_zamowienia_2026-11-03.xlsx | Budmat  | BUD-1002   | BM-205 | 12  | Duplikat zamówienia |
+| Budmat_zamowienia_2026-11-03.xlsx | Budmat  | BUD-1006   | BM-100 | 5   | Brak daty dostawy |
+| Budmat_zamowienia_2026-11-03.xlsx | Budmat  | BUD-1007   | BM-205 | 10  | Data dostawy w przeszłości (01.11.2026) |
 | Elmax_2026-11.xlsx                | Elmax   | EL-7004    | EL-01  |     | Ilość nie jest liczbą |
 | Kowalski_zamowienie.xlsx          |         |            |        |     | CAŁY PLIK: Nieznany klient (prefiks pliku: Kowalski) |
 | Techpol_orders_2026-11-03.xlsx    | Techpol | TP-5002    | TP-B7  | -5  | Ilość musi być większa od 0 |
@@ -55,8 +56,8 @@ na czystej historii daje 9 → 9 (bez KL005) → bez zmian dla istniejących, +1
 | Techpol_orders_2026-11-03.xlsx    | Techpol | TP-5004    | TP-Z9  | 20  | Brak mapowania indeksu TP-Z9 |
 | KL005_HurtowniaKarpaty_2026-11-03.xlsx | KL005 | KH/11/004 | KR-999 | 10 | Brak mapowania indeksu KR-999 |
 
-> Powyższe 9 wierszy to wynik weryfikowany robotem (uruchomienie z czystą historią, 2026-11-08).
-> Gdy `Przetworzone_zamowienia.xlsx` zawiera historyczny wpis `EL-6999`, dochodzi 10. wiersz:
+> Powyższe 11 wierszy to wynik po dodaniu walidacji daty dostawy (zadanie 3), z czystą historią.
+> Gdy `Przetworzone_zamowienia.xlsx` zawiera historyczny wpis `EL-6999`, dochodzi 12. wiersz:
 > `Elmax_2026-11.xlsx | Elmax | EL-6999 | EL-02 | 10 | Duplikat zamówienia`
 
 ---

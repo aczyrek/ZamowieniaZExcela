@@ -40,6 +40,8 @@ def generuj_budmat(katalog: str) -> None:
     ws.append(["BUD-1004", "BM-310", 0,    "14.11.2026"])  # błąd: ilość <= 0
     ws.append(["BUD-1005", "BM-100", 8,    "14.11.2026"])  # poprawny
     ws.append(["BUD-1002", "BM-205", 12,   "12.11.2026"])  # błąd: duplikat
+    ws.append(["BUD-1006", "BM-100", 5,    None          ])  # błąd: brak daty dostawy
+    ws.append(["BUD-1007", "BM-205", 10,   "01.11.2026"  ])  # błąd: data dostawy w przeszłości
     _zapisz(wb, katalog, "Budmat_zamowienia_2026-11-03.xlsx")
 
 

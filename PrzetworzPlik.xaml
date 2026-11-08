@@ -156,6 +156,7 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
               <Variable x:TypeArguments="x:String" Name="strData" />
               <Variable x:TypeArguments="x:String" Name="strPowod" />
               <Variable x:TypeArguments="x:Decimal" Name="decIlosc" />
+              <Variable x:TypeArguments="s:DateTime" Name="dtDataDostawy" />
             </Sequence.Variables>
             <Assign DisplayName="Nr zamówienia" sap2010:WorkflowViewState.IdRef="Assign_8">
               <Assign.To><OutArgument x:TypeArguments="x:String">[strNr]</OutArgument></Assign.To>
@@ -221,6 +222,28 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
                         <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_16">
                           <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
                           <Assign.Value><InArgument x:TypeArguments="x:String">["Ilość musi być większa od 0"]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                  </If>
+                  <If DisplayName="Reguła: data dostawy — brak" sap2010:WorkflowViewState.IdRef="If_11">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso dtWe.Columns.Contains("DataDostawy") AndAlso String.IsNullOrEmpty(strData)]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_15">
+                        <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_24">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">["Brak daty dostawy"]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                  </If>
+                  <If DisplayName="Reguła: data dostawy — w przeszłości" sap2010:WorkflowViewState.IdRef="If_12">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso Not String.IsNullOrEmpty(strData) AndAlso DateTime.TryParseExact(strData, New String() {&quot;yyyy-MM-dd&quot;, &quot;dd.MM.yyyy&quot;}, CultureInfo.InvariantCulture, DateTimeStyles.None, dtDataDostawy) AndAlso dtDataDostawy.Date &lt; DateTime.Today]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_16">
+                        <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_25">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">["Data dostawy w przeszłości (" &amp; strData &amp; ")"]</InArgument></Assign.Value>
                         </Assign>
                       </Sequence>
                     </If.Then>
