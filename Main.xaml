@@ -81,6 +81,11 @@
                 </Assign>
               </Sequence>
             </If.Then>
+            <If.Else>
+              <Throw DisplayName="Asset pusty — FolderRoboczy" sap2010:WorkflowViewState.IdRef="Throw_4">
+                <Throw.Exception><InArgument x:TypeArguments="s:Exception">[New Exception("Asset 'FolderRoboczy' ma pustą wartość. Skonfiguruj ścieżkę do folderu roboczego w Orchestratorze przed uruchomieniem robota.")]</InArgument></Throw.Exception>
+              </Throw>
+            </If.Else>
           </If>
         </Sequence>
       </TryCatch.Try>
@@ -91,7 +96,9 @@
               <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
             </ActivityAction.Argument>
             <Sequence DisplayName="Catch" sap2010:WorkflowViewState.IdRef="Sequence_13">
-              <ui:LogMessage DisplayName="Log - brak assetu, ścieżka domyślna" sap2010:WorkflowViewState.IdRef="LogMessage_6" Level="Warn" Message="[&quot;Nie udało się pobrać assetu FolderRoboczy (&quot; &amp; exception.Message &amp; &quot;). Używam ścieżki domyślnej.&quot;]" />
+              <Throw DisplayName="Asset wymagany — brak FolderRoboczy" sap2010:WorkflowViewState.IdRef="Throw_3">
+                <Throw.Exception><InArgument x:TypeArguments="s:Exception">[New Exception("Asset 'FolderRoboczy' nie jest skonfigurowany w Orchestratorze. Skonfiguruj asset przed uruchomieniem robota. Szczegóły: " &amp; exception.Message)]</InArgument></Throw.Exception>
+              </Throw>
             </Sequence>
           </ActivityAction>
         </Catch>
