@@ -39,6 +39,7 @@ Robot odczytuje cztery arkusze z folderu `Config/`:
 | `Konfiguracja_klientow.xlsx` | `Pliki` | PrefiksPliku, Klient, Arkusz, KomorkaStart | Mapowanie prefiksu nazwy pliku na klienta i lokalizację danych w pliku |
 | `Konfiguracja_klientow.xlsx` | `Kolumny` | Klient, KolumnaKlienta, PoleWspolne | Tłumaczenie nazw kolumn klienta na nazwy kanoniczne |
 | `Mapowanie_indeksow.xlsx` | `Mapowanie` | Klient, IndeksKlienta, IndeksWewnetrzny | Mapowanie indeksu klienta na wewnętrzny indeks SAP |
+| `Konfiguracja_klientow.xlsx` | `Ustawienia` (opcjonalny) | Klucz, Wartosc | Ustawienia ogólne. `ZnacznikKorekty` — dopisek w nazwie pliku oznaczający korektę zamówienia (domyślnie `_korekta`, gdy arkusza brak — robot loguje ostrzeżenie) |
 | `Przetworzone_zamowienia.xlsx` | `Przetworzone` | NrZamowienia, Klient, DataPrzetworzenia | Historia przetworzonych zamówień (ochrona przed duplikatami między uruchomieniami) |
 
 #### 3. Budowanie słowników
@@ -53,6 +54,22 @@ Dla każdego pliku `*.xlsx` (pomijane pliki tymczasowe `~$`):
 1. Wywoływany jest `PrzetworzPlik.xaml` z przekazanymi tabelami i słownikami.
 2. W przypadku sukcesu: plik przenoszony do `Processed/`, wiersze SAP i błędów scalane z tabelami zbiorczymi.
 3. W przypadku wyjątku (np. nieznany klient, brak wymaganych kolumn): do tabeli błędów trafia wpis `CAŁY PLIK: <komunikat>`, plik przenoszony do `Error/`.
+
+#### Korekta zamówienia
+
+Plik, którego nazwa (bez rozszerzenia) zawiera znacznik korekty (`ZnacznikKorekty`, domyślnie `_korekta`,
+np. `Budmat_zamowienia_2026-11-05_korekta.xlsx`), jest traktowany jako korekta zamówień o tych samych numerach:
+
+- pliki korekt są przetwarzane **po** wszystkich pozostałych plikach z `Input/`,
+- jeśli oryginał zamówienia trafił do SAP **w tym samym uruchomieniu**, pozycje oryginału są usuwane z pliku
+  do SAP i zastępowane pozycjami z korekty; w raporcie błędów pojawia się wiersz informacyjny
+  `Korekta zamówienia: zastąpiono pozycje z pliku <plik oryginału>`; historia dostaje numer tylko raz,
+- jeśli oryginał został wysłany do SAP **we wcześniejszym uruchomieniu** (jest w historii), wiersz jest
+  odrzucany z powodem `Korekta zamówienia wysłanego do SAP we wcześniejszym uruchomieniu — popraw ręcznie w SAP`,
+- jeśli oryginału nie ma ani w uruchomieniu, ani w historii, wiersz korekty jest przetwarzany jak zwykłe zamówienie.
+
+Obsługa korekt dotyczy `Main.xaml`; `Dispatcher.xaml` nie przekazuje znacznika, więc tam korekta jest nadal
+duplikatem.
 
 #### 5. Zapis wyników
 
@@ -89,7 +106,7 @@ Kolumny z pliku klienta są przemianowywane na nazwy kanoniczne:
 3. `Ilosc` musi dać się sparsować jako liczba dziesiętna
 4. `Ilosc` musi być większa od 0
 5. Klucz `Klient|IndeksKlienta` musi istnieć w słowniku indeksów
-6. `NrZamowienia` nie może być duplikatem (historia + bieżące uruchomienie + bieżący plik)
+6. `NrZamowienia` nie może być duplikatem (historia + bieżące uruchomienie + bieżący plik) — wyjątek: plik korekty (patrz *Korekta zamówienia*)
 
 Wiersz prawidłowy → tabela SAP. Wiersz błędny → tabela błędów z polem `Powod`.
 

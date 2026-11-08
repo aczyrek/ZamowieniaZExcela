@@ -96,6 +96,9 @@ cp /Users/adrianczyrek/Documents/RPA_Zamowienia_z_Excela/Config/Przetworzone_zam
    /Users/adrianczyrek/Documents/RPA_Zamowienia_z_Excela/Przetworzone_zamowienia_BACKUP.xlsx
 python3 narzedzia/wyczysc_historie.py   # lub ręcznie usuń wiersze w Przetworzone
 
+# 2a. (opcjonalnie) arkusz Config/Konfiguracja_klientow.xlsx → Ustawienia: Klucz=ZnacznikKorekty, Wartosc=_korekta
+#     — bez arkusza robot użyje domyślnego "_korekta" (wynik identyczny)
+
 # 3. Uruchom robota
 uip rpa run --file-path Main.xaml --project-dir . --output json
 
