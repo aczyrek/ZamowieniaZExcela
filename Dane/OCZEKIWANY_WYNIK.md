@@ -11,14 +11,19 @@ Wynik uruchomienia robota na **wszystkich 8 plikach testowych** (świeża histor
 
 ## Podsumowanie
 
-| Wynik | Bez KL005 | Z KL005 | Z korektą Budmat (zadanie: korekta zamówienia) |
-|---|---|---|---|
-| Gotowe do SAP | 8 | 11 | **13** |
-| Raport błędów | 11* | 11* | **13*** |
+| Wynik | Bez KL005 | Z KL005 | Z korektą Budmat (zadanie: korekta zamówienia) | Z anulowaniem pozycji (zadanie: anulowanie) |
+|---|---|---|---|---|
+| Gotowe do SAP | 8 | 11 | 13 | **13** |
+| Raport błędów | 11* | 11* | 13* | **14*** |
 
 Korekta zamówienia (pliki `Budmat_zamowienia_2026-11-05.xlsx` + `Budmat_zamowienia_2026-11-05_korekta.xlsx`):
 +2 wiersze SAP (BM/11/001 = 20 szt. z oryginału, BM/11/003 = **80** szt. z korekty — pozycja 60 szt.
 z oryginału została zastąpiona), +1 wiersz informacyjny w raporcie błędów.
+Anulowanie pozycji (`Elmax_2026-11.xlsx`, wiersz EL-7005: ilość 0, Uwagi = `anuluj`): pozycja **nie** trafia do SAP,
+w raporcie błędów +1 wiersz `Pozycja anulowana przez klienta` (zamiast `Ilość musi być większa od 0`).
+Wymaga mapowania kolumny uwag na pole wspólne `Uwagi` w arkuszu `Kolumny` (Elmax: `Uwagi` → `Uwagi`,
+Techpol: `Comment` → `Uwagi`).
+
 Plik `Techpol_orders_2026-11-05_korekta.xlsx` (korekta numeru BM/11/001, który należy do Budmat):
 +1 wiersz odrzucony — korekta nie może usunąć pozycji innego klienta.
 
@@ -51,7 +56,7 @@ dodaje 12. wiersz (informacyjny) i 13. (korekta cudzego numeru). Przy historii z
 
 ---
 
-## Raport błędów — 13 wierszy
+## Raport błędów — 14 wierszy
 
 | PlikZrodlowy | Klient | NrZamowienia | IndeksKlienta | Ilosc | Powod |
 |---|---|---|---|---|---|
@@ -61,6 +66,7 @@ dodaje 12. wiersz (informacyjny) i 13. (korekta cudzego numeru). Przy historii z
 | Budmat_zamowienia_2026-11-03.xlsx | Budmat  | BUD-1006   | BM-100 | 5   | Brak daty dostawy |
 | Budmat_zamowienia_2026-11-03.xlsx | Budmat  | BUD-1007   | BM-205 | 10  | Data dostawy w przeszłości (01.11.2026) |
 | Elmax_2026-11.xlsx                | Elmax   | EL-7004    | EL-01  |     | Ilość nie jest liczbą |
+| Elmax_2026-11.xlsx                | Elmax   | EL-7005    | EL-02  | 0   | Pozycja anulowana przez klienta |
 | Kowalski_zamowienie.xlsx          |         |            |        |     | CAŁY PLIK: Nieznany klient (prefiks pliku: Kowalski) |
 | Techpol_orders_2026-11-03.xlsx    | Techpol | TP-5002    | TP-B7  | -5  | Ilość musi być większa od 0 |
 | Techpol_orders_2026-11-03.xlsx    | Techpol | TP-5003    | TP-C3  | dwa | Ilość nie jest liczbą |
@@ -82,7 +88,7 @@ pozycji automatycznie. Wiersz zostaje odrzucony z jasnym powodem (zamiast „Dup
 |---|---|---|---|---|---|
 | Budmat_zamowienia_2026-11-05_korekta.xlsx | Budmat | BM/11/003 | BM-205 | 80 | Korekta zamówienia, które zostało już wysłane do SAP (wcześniejsze uruchomienie lub inny klient) — popraw ręcznie w SAP |
 
-> Powyższe 13 wierszy to wynik z czystą historią (walidacja daty dostawy + korekta zamówienia).
+> Powyższe 14 wierszy to wynik z czystą historią (walidacja daty dostawy + korekta zamówienia + anulowanie pozycji).
 > Gdy `Przetworzone_zamowienia.xlsx` zawiera historyczny wpis `EL-6999`, dochodzi 12. wiersz:
 > `Elmax_2026-11.xlsx | Elmax | EL-6999 | EL-02 | 10 | Duplikat zamówienia`
 
@@ -101,6 +107,9 @@ python3 narzedzia/wyczysc_historie.py   # lub ręcznie usuń wiersze w Przetworz
 
 # 2a. (opcjonalnie) arkusz Config/Konfiguracja_klientow.xlsx → Ustawienia: Klucz=ZnacznikKorekty, Wartosc=_korekta
 #     — bez arkusza robot użyje domyślnego "_korekta" (wynik identyczny)
+
+# 2b. Config/Konfiguracja_klientow.xlsx → Kolumny: dopisz mapowanie uwag (wymagane dla anulowania EL-7005):
+#     Elmax | Uwagi | Uwagi   oraz   Techpol | Comment | Uwagi
 
 # 3. Uruchom robota
 uip rpa run --file-path Main.xaml --project-dir . --output json

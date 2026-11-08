@@ -98,9 +98,13 @@ Kolumny z pliku klienta są przemianowywane na nazwy kanoniczne:
 | `IndeksKlienta` | Indeks produktu po stronie klienta |
 | `Ilosc` | Ilość (dziesiętna, InvariantCulture) |
 | `DataDostawy` | Data dostawy (opcjonalna) |
+| `Uwagi` | Uwagi klienta (opcjonalne) — słowo `ANULUJ` anuluje pozycję |
 
-#### Walidacja wierszy (6 reguł, zatrzymanie na pierwszym błędzie)
+#### Walidacja wierszy (zatrzymanie na pierwszej spełnionej regule)
 
+0. Jeśli `Uwagi` zawierają słowo `ANULUJ` (wielkość liter bez znaczenia, całe słowo) — pozycja **nie** trafia do SAP ani do historii,
+   a w raporcie błędów ma powód `Pozycja anulowana przez klienta` (zamiast np. błędu ilości 0). Wymaga mapowania kolumny uwag klienta
+   na pole `Uwagi` w arkuszu `Kolumny` (np. `Elmax | Uwagi | Uwagi`, `Techpol | Comment | Uwagi`); bez mapowania reguła nie działa.
 1. `NrZamowienia` nie może być puste
 2. `IndeksKlienta` nie może być puste
 3. `Ilosc` musi dać się sparsować jako liczba dziesiętna

@@ -40,6 +40,7 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
       <x:String>System.Globalization</x:String>
       <x:String>System.IO</x:String>
       <x:String>System.Linq</x:String>
+      <x:String>System.Text.RegularExpressions</x:String>
       <x:String>UiPath.Core</x:String>
       <x:String>UiPath.Core.Activities</x:String>
     </sco:Collection>
@@ -54,6 +55,7 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
       <AssemblyReference>System.Data.Common</AssemblyReference>
       <AssemblyReference>System</AssemblyReference>
       <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
       <AssemblyReference>System.Core</AssemblyReference>
       <AssemblyReference>System.Xaml</AssemblyReference>
       <AssemblyReference>UiPath.System.Activities</AssemblyReference>
@@ -73,6 +75,7 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:Boolean)" Name="dictWPliku" Default="[New Dictionary(Of String, Boolean)()]" />
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Name="dictWyslane" />
       <Variable x:TypeArguments="x:Boolean" Name="boolKorekta" />
+      <Variable x:TypeArguments="x:String" Name="strSlowoAnulowania" Default="ANULUJ" />
     </Sequence.Variables>
 
     <!-- 1. Rozpoznanie klienta po prefiksie nazwy pliku -->
@@ -170,6 +173,7 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
               <Variable x:TypeArguments="x:Decimal" Name="decIlosc" />
               <Variable x:TypeArguments="s:DateTime" Name="dtDataDostawy" />
               <Variable x:TypeArguments="x:String" Name="strPlikOryginalu" />
+              <Variable x:TypeArguments="x:String" Name="strUwagi" />
             </Sequence.Variables>
             <Assign DisplayName="Nr zamówienia" sap2010:WorkflowViewState.IdRef="Assign_8">
               <Assign.To><OutArgument x:TypeArguments="x:String">[strNr]</OutArgument></Assign.To>
@@ -187,6 +191,10 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
               <Assign.To><OutArgument x:TypeArguments="x:String">[strData]</OutArgument></Assign.To>
               <Assign.Value><InArgument x:TypeArguments="x:String">[If(Not dtWe.Columns.Contains("DataDostawy"), "", If(TypeOf CurrentRow("DataDostawy") Is DateTime, CDate(CurrentRow("DataDostawy")).ToString("yyyy-MM-dd"), CurrentRow("DataDostawy").ToString.Trim))]</InArgument></Assign.Value>
             </Assign>
+            <Assign DisplayName="Uwagi (jeśli klient je podaje)" sap2010:WorkflowViewState.IdRef="Assign_31">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[strUwagi]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[If(dtWe.Columns.Contains("Uwagi"), CurrentRow("Uwagi").ToString.Trim, String.Empty)]</InArgument></Assign.Value>
+            </Assign>
             <Assign DisplayName="Powód błędu = pusty" sap2010:WorkflowViewState.IdRef="Assign_12">
               <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
               <Assign.Value><InArgument x:TypeArguments="x:String">[String.Empty]</InArgument></Assign.Value>
@@ -199,6 +207,17 @@ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
               <If.Condition><InArgument x:TypeArguments="x:Boolean">[Not (String.IsNullOrEmpty(strNr) AndAlso String.IsNullOrEmpty(strIndeks) AndAlso String.IsNullOrEmpty(strIlosc))]</InArgument></If.Condition>
               <If.Then>
                 <Sequence DisplayName="Waliduj wiersz" sap2010:WorkflowViewState.IdRef="Sequence_6">
+                  <If DisplayName="Reguła: pozycja anulowana przez klienta (słowo ANULUJ w Uwagach)" sap2010:WorkflowViewState.IdRef="If_16">
+                    <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso Not String.IsNullOrWhiteSpace(strUwagi) AndAlso Regex.IsMatch(strUwagi, "\b" &amp; Regex.Escape(strSlowoAnulowania) &amp; "\b", RegexOptions.IgnoreCase Or RegexOptions.CultureInvariant)]</InArgument></If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_20">
+                        <Assign DisplayName="Powód" sap2010:WorkflowViewState.IdRef="Assign_32">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[strPowod]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">["Pozycja anulowana przez klienta"]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </If.Then>
+                  </If>
                   <If DisplayName="Reguła: numer zamówienia" sap2010:WorkflowViewState.IdRef="If_4">
                     <If.Condition><InArgument x:TypeArguments="x:Boolean">[strPowod = "" AndAlso String.IsNullOrEmpty(strNr)]</InArgument></If.Condition>
                     <If.Then>

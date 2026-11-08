@@ -64,7 +64,7 @@ def generuj_techpol(katalog: str) -> None:
 
 # ---------------------------------------------------------------------------
 # Elmax — Arkusz1 (A3), 2 wiersze nagłówkowe; bez kolumny DataDostawy;
-#         błędy: pusta ilość
+#         błędy: pusta ilość; anulowanie: "anuluj" w Uwagach (ilość 0)
 # ---------------------------------------------------------------------------
 def generuj_elmax(katalog: str) -> None:
     wb = openpyxl.Workbook()
@@ -77,6 +77,7 @@ def generuj_elmax(katalog: str) -> None:
     ws.append([2, "EL-7002", "EL-02",    25,   "pilne"])   # poprawny
     ws.append([3, "EL-7003", "  EL-03 ", 5,    None])      # poprawny (spacje wokół indeksu)
     ws.append([4, "EL-7004", "EL-01",    None, None])      # błąd: pusta ilość
+    ws.append([5, "EL-7005", "EL-02",    0,    "anuluj"])  # anulowana przez klienta (nie błąd ilości)
     _zapisz(wb, katalog, "Elmax_2026-11.xlsx")
 
 
