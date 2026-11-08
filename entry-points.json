@@ -2,32 +2,19 @@
   "$schema": "https://cloud.uipath.com/draft/2024-12/entry-point",
   "entryPoints": [
     {
-      "filePath": "Main.xaml",
-      "uniqueId": "9296a623-e3dc-4249-91ff-9214d4b66001",
+      "filePath": "Dispatcher.xaml",
+      "uniqueId": "b5c6d7e8-0001-4000-8000-000000000010",
       "type": "process"
     },
     {
-      "filePath": "Dispatcher.xaml",
-      "uniqueId": "b5c6d7e8-0001-4000-8000-000000000010",
+      "filePath": "Main.xaml",
+      "uniqueId": "9296a623-e3dc-4249-91ff-9214d4b66001",
       "type": "process"
     },
     {
       "filePath": "Performer.xaml",
       "uniqueId": "b5c6d7e8-0002-4000-8000-000000000011",
       "type": "process"
-      "filePath": "Test_PrzetworzPlik_PoprawnyWiersz.xaml",
-      "uniqueId": "a1b2c3d4-0001-4000-8000-000000000001",
-      "type": "testCase"
-    },
-    {
-      "filePath": "Test_PrzetworzPlik_BrakNumeruZamowienia.xaml",
-      "uniqueId": "a1b2c3d4-0002-4000-8000-000000000002",
-      "type": "testCase"
-    },
-    {
-      "filePath": "Test_PrzetworzPlik_DataDostawy.xaml",
-      "uniqueId": "a1b2c3d4-0003-4000-8000-000000000003",
-      "type": "testCase"
     }
   ]
 }

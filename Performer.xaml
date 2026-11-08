@@ -1,4 +1,4 @@
-<Activity mc:Ignorable="sap sap2010" x:Class="Performer" VisualBasic.Settings="{x:Null}" sap2010:WorkflowViewState.IdRef="ActivityBuilder_1" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uic="clr-namespace:UiPath.Core.Activities;assembly=UiPath.System.Activities" xmlns:uicore="clr-namespace:UiPath.Core;assembly=UiPath.Core" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Activity mc:Ignorable="sap sap2010" x:Class="Performer" VisualBasic.Settings="{x:Null}" sap2010:WorkflowViewState.IdRef="ActivityBuilder_1" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uic="clr-namespace:UiPath.Core.Activities;assembly=UiPath.System.Activities" xmlns:uicore="clr-namespace:UiPath.Core;assembly=UiPath.System.Activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <TextExpression.NamespacesForImplementation>
     <sco:Collection x:TypeArguments="x:String">
       <x:String>GlobalConstantsNamespace</x:String>
@@ -47,8 +47,8 @@
       <Variable x:TypeArguments="sd:DataTable" Name="dtSap" />
       <Variable x:TypeArguments="uicore:QueueItem" Name="queueItem" />
       <Variable x:TypeArguments="x:Boolean" Default="[True]" Name="boolKontynuuj" />
-      <Variable x:TypeArguments="x:Integer" Default="[0]" Name="intPrzetworzone" />
-      <Variable x:TypeArguments="x:Integer" Default="[0]" Name="intBledy" />
+      <Variable x:TypeArguments="x:Int32" Default="[0]" Name="intPrzetworzone" />
+      <Variable x:TypeArguments="x:Int32" Default="[0]" Name="intBledy" />
     </Sequence.Variables>
     <sap:WorkflowViewStateService.ViewState>
       <scg:Dictionary x:TypeArguments="x:String, x:Object">
@@ -139,15 +139,14 @@
     <ui:LogMessage DisplayName="Log - start Performer" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info" Message="[&quot;Performer START. Kolejka: &quot; &amp; strNazwaKolejki]" />
 
     <!-- 3. Pierwsze pobranie pozycji z kolejki -->
-    <ui:GetTransactionItem DisplayName="Get Transaction Item - pierwsze" sap2010:WorkflowViewState.IdRef="GetTransactionItem_1" QueueName="[strNazwaKolejki]">
-      <ui:GetTransactionItem.TransactionItem>
+    <ui:GetQueueItem DisplayName="Get Transaction Item - pierwsze" sap2010:WorkflowViewState.IdRef="GetTransactionItem_1" QueueType="[strNazwaKolejki]">
+      <ui:GetQueueItem.TransactionItem>
         <OutArgument x:TypeArguments="uicore:QueueItem">[queueItem]</OutArgument>
-      </ui:GetTransactionItem.TransactionItem>
-    </ui:GetTransactionItem>
+      </ui:GetQueueItem.TransactionItem>
+    </ui:GetQueueItem>
 
     <!-- 4. Pętla: przetwarzaj dopóki są pozycje w kolejce -->
-    <While DisplayName="Pętla — dopóki są pozycje w kolejce" sap2010:WorkflowViewState.IdRef="While_1">
-      <While.Condition><InArgument x:TypeArguments="x:Boolean">[boolKontynuuj AndAlso queueItem IsNot Nothing]</InArgument></While.Condition>
+    <While Condition="[boolKontynuuj AndAlso queueItem IsNot Nothing]" DisplayName="Pętla — dopóki są pozycje w kolejce" sap2010:WorkflowViewState.IdRef="While_1">
       <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_4">
         <ui:LogMessage DisplayName="Log - przetwarzam pozycję" sap2010:WorkflowViewState.IdRef="LogMessage_2" Level="Info" Message="[&quot;Performer: &quot; &amp; queueItem.Reference]" />
         <TryCatch DisplayName="Try Catch - jedna pozycja kolejki" sap2010:WorkflowViewState.IdRef="TryCatch_3">
@@ -160,13 +159,13 @@
               </uic:AddDataRow>
               <!-- Ustaw status Successful -->
               <ui:SetTransactionStatus DisplayName="Set Transaction Status - Successful" sap2010:WorkflowViewState.IdRef="SetTransactionStatus_1" Status="Successful">
-                <ui:SetTransactionStatus.QueueItem>
+                <ui:SetTransactionStatus.TransactionItem>
                   <InArgument x:TypeArguments="uicore:QueueItem">[queueItem]</InArgument>
-                </ui:SetTransactionStatus.QueueItem>
+                </ui:SetTransactionStatus.TransactionItem>
               </ui:SetTransactionStatus>
               <Assign DisplayName="Licznik przetworzonych +1" sap2010:WorkflowViewState.IdRef="Assign_4">
-                <Assign.To><OutArgument x:TypeArguments="x:Integer">[intPrzetworzone]</OutArgument></Assign.To>
-                <Assign.Value><InArgument x:TypeArguments="x:Integer">[intPrzetworzone + 1]</InArgument></Assign.Value>
+                <Assign.To><OutArgument x:TypeArguments="x:Int32">[intPrzetworzone]</OutArgument></Assign.To>
+                <Assign.Value><InArgument x:TypeArguments="x:Int32">[intPrzetworzone + 1]</InArgument></Assign.Value>
               </Assign>
             </Sequence>
           </TryCatch.Try>
@@ -177,18 +176,18 @@
                   <DelegateInArgument x:TypeArguments="uicore:BusinessRuleException" Name="bizEx" />
                 </ActivityAction.Argument>
                 <Sequence DisplayName="Catch - błąd biznesowy (nie ponawiaj)" sap2010:WorkflowViewState.IdRef="Sequence_6">
-                  <ui:SetTransactionStatus DisplayName="Set Transaction Status - Failed (nie ponawiaj)" sap2010:WorkflowViewState.IdRef="SetTransactionStatus_2" Status="Failed">
-                    <ui:SetTransactionStatus.QueueItem>
+                  <ui:SetTransactionStatus DisplayName="Set Transaction Status - Failed (nie ponawiaj)" sap2010:WorkflowViewState.IdRef="SetTransactionStatus_2" Status="Failed" ErrorType="Business">
+                    <ui:SetTransactionStatus.TransactionItem>
                       <InArgument x:TypeArguments="uicore:QueueItem">[queueItem]</InArgument>
-                    </ui:SetTransactionStatus.QueueItem>
-                    <ui:SetTransactionStatus.ErrorInfo>
+                    </ui:SetTransactionStatus.TransactionItem>
+                    <ui:SetTransactionStatus.Reason>
                       <InArgument x:TypeArguments="x:String">["Błąd biznesowy: " &amp; bizEx.Message]</InArgument>
-                    </ui:SetTransactionStatus.ErrorInfo>
+                    </ui:SetTransactionStatus.Reason>
                   </ui:SetTransactionStatus>
                   <ui:LogMessage DisplayName="Log - błąd biznesowy" sap2010:WorkflowViewState.IdRef="LogMessage_3" Level="Warn" Message="[&quot;Performer błąd biznesowy &quot; &amp; queueItem.Reference &amp; &quot;: &quot; &amp; bizEx.Message]" />
                   <Assign DisplayName="Licznik błędów +1" sap2010:WorkflowViewState.IdRef="Assign_5">
-                    <Assign.To><OutArgument x:TypeArguments="x:Integer">[intBledy]</OutArgument></Assign.To>
-                    <Assign.Value><InArgument x:TypeArguments="x:Integer">[intBledy + 1]</InArgument></Assign.Value>
+                    <Assign.To><OutArgument x:TypeArguments="x:Int32">[intBledy]</OutArgument></Assign.To>
+                    <Assign.Value><InArgument x:TypeArguments="x:Int32">[intBledy + 1]</InArgument></Assign.Value>
                   </Assign>
                 </Sequence>
               </ActivityAction>
@@ -199,18 +198,18 @@
                   <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
                 </ActivityAction.Argument>
                 <Sequence DisplayName="Catch - błąd ogólny (Orchestrator ponowi)" sap2010:WorkflowViewState.IdRef="Sequence_7">
-                  <ui:SetTransactionStatus DisplayName="Set Transaction Status - Failed (ponów)" sap2010:WorkflowViewState.IdRef="SetTransactionStatus_3" Status="Failed">
-                    <ui:SetTransactionStatus.QueueItem>
+                  <ui:SetTransactionStatus DisplayName="Set Transaction Status - Failed (ponów)" sap2010:WorkflowViewState.IdRef="SetTransactionStatus_3" Status="Failed" ErrorType="Application">
+                    <ui:SetTransactionStatus.TransactionItem>
                       <InArgument x:TypeArguments="uicore:QueueItem">[queueItem]</InArgument>
-                    </ui:SetTransactionStatus.QueueItem>
-                    <ui:SetTransactionStatus.ErrorInfo>
+                    </ui:SetTransactionStatus.TransactionItem>
+                    <ui:SetTransactionStatus.Reason>
                       <InArgument x:TypeArguments="x:String">["Błąd: " &amp; exception.Message]</InArgument>
-                    </ui:SetTransactionStatus.ErrorInfo>
+                    </ui:SetTransactionStatus.Reason>
                   </ui:SetTransactionStatus>
                   <ui:LogMessage DisplayName="Log - błąd ogólny" sap2010:WorkflowViewState.IdRef="LogMessage_4" Level="Error" Message="[&quot;Performer błąd ogólny &quot; &amp; queueItem.Reference &amp; &quot;: &quot; &amp; exception.Message]" />
                   <Assign DisplayName="Licznik błędów +1" sap2010:WorkflowViewState.IdRef="Assign_6">
-                    <Assign.To><OutArgument x:TypeArguments="x:Integer">[intBledy]</OutArgument></Assign.To>
-                    <Assign.Value><InArgument x:TypeArguments="x:Integer">[intBledy + 1]</InArgument></Assign.Value>
+                    <Assign.To><OutArgument x:TypeArguments="x:Int32">[intBledy]</OutArgument></Assign.To>
+                    <Assign.Value><InArgument x:TypeArguments="x:Int32">[intBledy + 1]</InArgument></Assign.Value>
                   </Assign>
                 </Sequence>
               </ActivityAction>
@@ -219,11 +218,11 @@
         </TryCatch>
 
         <!-- Pobierz kolejną pozycję -->
-        <ui:GetTransactionItem DisplayName="Get Transaction Item - następna" sap2010:WorkflowViewState.IdRef="GetTransactionItem_2" QueueName="[strNazwaKolejki]">
-          <ui:GetTransactionItem.TransactionItem>
+        <ui:GetQueueItem DisplayName="Get Transaction Item - następna" sap2010:WorkflowViewState.IdRef="GetTransactionItem_2" QueueType="[strNazwaKolejki]">
+          <ui:GetQueueItem.TransactionItem>
             <OutArgument x:TypeArguments="uicore:QueueItem">[queueItem]</OutArgument>
-          </ui:GetTransactionItem.TransactionItem>
-        </ui:GetTransactionItem>
+          </ui:GetQueueItem.TransactionItem>
+        </ui:GetQueueItem>
       </Sequence>
     </While>
 

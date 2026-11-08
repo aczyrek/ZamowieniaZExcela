@@ -255,11 +255,7 @@
                           <!-- Referencja = Klient|NrZamowienia — Orchestrator odrzuca duplikaty automatycznie -->
                           <TryCatch DisplayName="Try Catch - Add Queue Item" sap2010:WorkflowViewState.IdRef="TryCatch_4">
                             <TryCatch.Try>
-                              <ui:AddQueueItem DisplayName="Add Queue Item - zamówienie" sap2010:WorkflowViewState.IdRef="AddQueueItem_1" QueueName="[strNazwaKolejki]" Reference="[CurrentRow(&quot;Klient&quot;).ToString &amp; &quot;|&quot; &amp; CurrentRow(&quot;NrZamowienia&quot;).ToString]">
-                                <ui:AddQueueItem.ItemInformation>
-                                  <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[dictItemData]</InArgument>
-                                </ui:AddQueueItem.ItemInformation>
-                              </ui:AddQueueItem>
+                              <ui:AddQueueItem DisplayName="Add Queue Item - zamówienie" sap2010:WorkflowViewState.IdRef="AddQueueItem_1" QueueType="[strNazwaKolejki]" ItemInformationCollection="[dictItemData]" Reference="[CurrentRow(&quot;Klient&quot;).ToString &amp; &quot;|&quot; &amp; CurrentRow(&quot;NrZamowienia&quot;).ToString]" />
                             </TryCatch.Try>
                             <TryCatch.Catches>
                               <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch_3">
