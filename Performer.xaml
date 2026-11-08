@@ -1,0 +1,238 @@
+<Activity mc:Ignorable="sap sap2010" x:Class="Performer" VisualBasic.Settings="{x:Null}" sap2010:WorkflowViewState.IdRef="ActivityBuilder_1" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uic="clr-namespace:UiPath.Core.Activities;assembly=UiPath.System.Activities" xmlns:uicore="clr-namespace:UiPath.Core;assembly=UiPath.Core" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>Microsoft.VisualBasic.Activities</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.Expressions</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Core</AssemblyReference>
+      <AssemblyReference>System.Data.DataSetExtensions</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Performer - przetwarzanie kolejki zamówień" sap2010:WorkflowViewState.IdRef="Sequence_1">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Default="/Users/adrianczyrek/Documents/RPA_Zamowienia_z_Excela" Name="strFolder" />
+      <Variable x:TypeArguments="x:String" Default="ZamowieniaDoSAP" Name="strNazwaKolejki" />
+      <Variable x:TypeArguments="x:String" Name="strZnacznikCzasu" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtSap" />
+      <Variable x:TypeArguments="uicore:QueueItem" Name="queueItem" />
+      <Variable x:TypeArguments="x:Boolean" Default="[True]" Name="boolKontynuuj" />
+      <Variable x:TypeArguments="x:Integer" Default="[0]" Name="intPrzetworzone" />
+      <Variable x:TypeArguments="x:Integer" Default="[0]" Name="intBledy" />
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+
+    <!-- 1. Pobranie FolderRoboczy z Orchestratora (wymagany) -->
+    <TryCatch DisplayName="Try Catch - FolderRoboczy z Orchestratora" sap2010:WorkflowViewState.IdRef="TryCatch_1">
+      <TryCatch.Try>
+        <Sequence DisplayName="Try" sap2010:WorkflowViewState.IdRef="Sequence_2">
+          <Sequence.Variables>
+            <Variable x:TypeArguments="x:Object" Name="objFolder" />
+          </Sequence.Variables>
+          <ui:GetRobotAsset TimeoutMS="{x:Null}" AssetName="FolderRoboczy" CacheStrategy="None" DisplayName="Get Asset - FolderRoboczy" sap2010:WorkflowViewState.IdRef="GetRobotAsset_1">
+            <ui:GetRobotAsset.Value>
+              <OutArgument x:TypeArguments="x:Object">[objFolder]</OutArgument>
+            </ui:GetRobotAsset.Value>
+          </ui:GetRobotAsset>
+          <If Condition="[objFolder IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(objFolder.ToString)]" DisplayName="Czy asset ma wartość?" sap2010:WorkflowViewState.IdRef="If_1">
+            <If.Then>
+              <Assign DisplayName="strFolder = asset" sap2010:WorkflowViewState.IdRef="Assign_1">
+                <Assign.To><OutArgument x:TypeArguments="x:String">[strFolder]</OutArgument></Assign.To>
+                <Assign.Value><InArgument x:TypeArguments="x:String">[objFolder.ToString.Trim]</InArgument></Assign.Value>
+              </Assign>
+            </If.Then>
+            <If.Else>
+              <Throw DisplayName="Asset pusty — FolderRoboczy" sap2010:WorkflowViewState.IdRef="Throw_1">
+                <Throw.Exception><InArgument x:TypeArguments="s:Exception">[New Exception("Asset 'FolderRoboczy' ma pustą wartość. Skonfiguruj ścieżkę w Orchestratorze.")]</InArgument></Throw.Exception>
+              </Throw>
+            </If.Else>
+          </If>
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch_1">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+            </ActivityAction.Argument>
+            <Throw DisplayName="Asset wymagany — brak FolderRoboczy" sap2010:WorkflowViewState.IdRef="Throw_2">
+              <Throw.Exception><InArgument x:TypeArguments="s:Exception">[New Exception("Asset 'FolderRoboczy' nie jest skonfigurowany. " &amp; exception.Message)]</InArgument></Throw.Exception>
+            </Throw>
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+    <!-- 2. Pobranie NazwaKolejki z Orchestratora (z domyślną) -->
+    <TryCatch DisplayName="Try Catch - NazwaKolejki z Orchestratora" sap2010:WorkflowViewState.IdRef="TryCatch_2">
+      <TryCatch.Try>
+        <Sequence DisplayName="Try" sap2010:WorkflowViewState.IdRef="Sequence_3">
+          <Sequence.Variables>
+            <Variable x:TypeArguments="x:Object" Name="objKolejka" />
+          </Sequence.Variables>
+          <ui:GetRobotAsset TimeoutMS="{x:Null}" AssetName="NazwaKolejki" CacheStrategy="None" DisplayName="Get Asset - NazwaKolejki" sap2010:WorkflowViewState.IdRef="GetRobotAsset_2">
+            <ui:GetRobotAsset.Value>
+              <OutArgument x:TypeArguments="x:Object">[objKolejka]</OutArgument>
+            </ui:GetRobotAsset.Value>
+          </ui:GetRobotAsset>
+          <If Condition="[objKolejka IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(objKolejka.ToString)]" DisplayName="Czy asset NazwaKolejki ma wartość?" sap2010:WorkflowViewState.IdRef="If_2">
+            <If.Then>
+              <Assign DisplayName="strNazwaKolejki = asset" sap2010:WorkflowViewState.IdRef="Assign_2">
+                <Assign.To><OutArgument x:TypeArguments="x:String">[strNazwaKolejki]</OutArgument></Assign.To>
+                <Assign.Value><InArgument x:TypeArguments="x:String">[objKolejka.ToString.Trim]</InArgument></Assign.Value>
+              </Assign>
+            </If.Then>
+          </If>
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch_2">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+            </ActivityAction.Argument>
+            <ui:LogMessage DisplayName="Log - brak assetu NazwaKolejki, domyślna" sap2010:WorkflowViewState.IdRef="LogMessage_0" Level="Warn" Message="[&quot;Brak assetu NazwaKolejki (&quot; &amp; exception.Message &amp; &quot;). Używam domyślnej: &quot; &amp; strNazwaKolejki]" />
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+    </TryCatch>
+
+    <Assign DisplayName="Znacznik czasu" sap2010:WorkflowViewState.IdRef="Assign_3">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[strZnacznikCzasu]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[Now.ToString("yyyyMMdd_HHmmss")]</InArgument></Assign.Value>
+    </Assign>
+    <ui:GenerateDataTable ColumnSeparators="{x:Null}" ColumnSizes="{x:Null}" NewLineSeparator="{x:Null}" Positions="{x:Null}" AutoDetectTypes="False" CSVParsing="True" DataTable="[dtSap]" DisplayName="Tabela SAP — pusta" sap2010:WorkflowViewState.IdRef="GenerateDataTable_1" Input="[&quot;NrZamowienia,Klient,IndeksKlienta,IndeksWewnetrzny,Ilosc,DataDostawy,PlikZrodlowy&quot;]" UseColumnHeader="True" />
+    <ui:LogMessage DisplayName="Log - start Performer" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info" Message="[&quot;Performer START. Kolejka: &quot; &amp; strNazwaKolejki]" />
+
+    <!-- 3. Pierwsze pobranie pozycji z kolejki -->
+    <ui:GetTransactionItem DisplayName="Get Transaction Item - pierwsze" sap2010:WorkflowViewState.IdRef="GetTransactionItem_1" QueueName="[strNazwaKolejki]">
+      <ui:GetTransactionItem.TransactionItem>
+        <OutArgument x:TypeArguments="uicore:QueueItem">[queueItem]</OutArgument>
+      </ui:GetTransactionItem.TransactionItem>
+    </ui:GetTransactionItem>
+
+    <!-- 4. Pętla: przetwarzaj dopóki są pozycje w kolejce -->
+    <While DisplayName="Pętla — dopóki są pozycje w kolejce" sap2010:WorkflowViewState.IdRef="While_1">
+      <While.Condition><InArgument x:TypeArguments="x:Boolean">[boolKontynuuj AndAlso queueItem IsNot Nothing]</InArgument></While.Condition>
+      <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_4">
+        <ui:LogMessage DisplayName="Log - przetwarzam pozycję" sap2010:WorkflowViewState.IdRef="LogMessage_2" Level="Info" Message="[&quot;Performer: &quot; &amp; queueItem.Reference]" />
+        <TryCatch DisplayName="Try Catch - jedna pozycja kolejki" sap2010:WorkflowViewState.IdRef="TryCatch_3">
+          <TryCatch.Try>
+            <Sequence DisplayName="Try" sap2010:WorkflowViewState.IdRef="Sequence_5">
+              <!-- Dodaj wiersz do tabeli SAP na podstawie danych z kolejki -->
+              <uic:AddDataRow DisplayName="Add Data Row - SAP z kolejki" sap2010:WorkflowViewState.IdRef="AddDataRow_1">
+                <uic:AddDataRow.DataTable><InOutArgument x:TypeArguments="sd:DataTable">[dtSap]</InOutArgument></uic:AddDataRow.DataTable>
+                <uic:AddDataRow.ArrayRow><InArgument x:TypeArguments="s:Object[]">[New Object() {queueItem.SpecificContent("NrZamowienia").ToString, queueItem.SpecificContent("Klient").ToString, queueItem.SpecificContent("IndeksKlienta").ToString, queueItem.SpecificContent("IndeksWewnetrzny").ToString, queueItem.SpecificContent("Ilosc").ToString, queueItem.SpecificContent("DataDostawy").ToString, queueItem.SpecificContent("PlikZrodlowy").ToString}]</InArgument></uic:AddDataRow.ArrayRow>
+              </uic:AddDataRow>
+              <!-- Ustaw status Successful -->
+              <ui:SetTransactionStatus DisplayName="Set Transaction Status - Successful" sap2010:WorkflowViewState.IdRef="SetTransactionStatus_1" Status="Successful">
+                <ui:SetTransactionStatus.QueueItem>
+                  <InArgument x:TypeArguments="uicore:QueueItem">[queueItem]</InArgument>
+                </ui:SetTransactionStatus.QueueItem>
+              </ui:SetTransactionStatus>
+              <Assign DisplayName="Licznik przetworzonych +1" sap2010:WorkflowViewState.IdRef="Assign_4">
+                <Assign.To><OutArgument x:TypeArguments="x:Integer">[intPrzetworzone]</OutArgument></Assign.To>
+                <Assign.Value><InArgument x:TypeArguments="x:Integer">[intPrzetworzone + 1]</InArgument></Assign.Value>
+              </Assign>
+            </Sequence>
+          </TryCatch.Try>
+          <TryCatch.Catches>
+            <Catch x:TypeArguments="uicore:BusinessRuleException" sap2010:WorkflowViewState.IdRef="Catch_3">
+              <ActivityAction x:TypeArguments="uicore:BusinessRuleException">
+                <ActivityAction.Argument>
+                  <DelegateInArgument x:TypeArguments="uicore:BusinessRuleException" Name="bizEx" />
+                </ActivityAction.Argument>
+                <Sequence DisplayName="Catch - błąd biznesowy (nie ponawiaj)" sap2010:WorkflowViewState.IdRef="Sequence_6">
+                  <ui:SetTransactionStatus DisplayName="Set Transaction Status - Failed (nie ponawiaj)" sap2010:WorkflowViewState.IdRef="SetTransactionStatus_2" Status="Failed">
+                    <ui:SetTransactionStatus.QueueItem>
+                      <InArgument x:TypeArguments="uicore:QueueItem">[queueItem]</InArgument>
+                    </ui:SetTransactionStatus.QueueItem>
+                    <ui:SetTransactionStatus.ErrorInfo>
+                      <InArgument x:TypeArguments="x:String">["Błąd biznesowy: " &amp; bizEx.Message]</InArgument>
+                    </ui:SetTransactionStatus.ErrorInfo>
+                  </ui:SetTransactionStatus>
+                  <ui:LogMessage DisplayName="Log - błąd biznesowy" sap2010:WorkflowViewState.IdRef="LogMessage_3" Level="Warn" Message="[&quot;Performer błąd biznesowy &quot; &amp; queueItem.Reference &amp; &quot;: &quot; &amp; bizEx.Message]" />
+                  <Assign DisplayName="Licznik błędów +1" sap2010:WorkflowViewState.IdRef="Assign_5">
+                    <Assign.To><OutArgument x:TypeArguments="x:Integer">[intBledy]</OutArgument></Assign.To>
+                    <Assign.Value><InArgument x:TypeArguments="x:Integer">[intBledy + 1]</InArgument></Assign.Value>
+                  </Assign>
+                </Sequence>
+              </ActivityAction>
+            </Catch>
+            <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch_4">
+              <ActivityAction x:TypeArguments="s:Exception">
+                <ActivityAction.Argument>
+                  <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                </ActivityAction.Argument>
+                <Sequence DisplayName="Catch - błąd ogólny (Orchestrator ponowi)" sap2010:WorkflowViewState.IdRef="Sequence_7">
+                  <ui:SetTransactionStatus DisplayName="Set Transaction Status - Failed (ponów)" sap2010:WorkflowViewState.IdRef="SetTransactionStatus_3" Status="Failed">
+                    <ui:SetTransactionStatus.QueueItem>
+                      <InArgument x:TypeArguments="uicore:QueueItem">[queueItem]</InArgument>
+                    </ui:SetTransactionStatus.QueueItem>
+                    <ui:SetTransactionStatus.ErrorInfo>
+                      <InArgument x:TypeArguments="x:String">["Błąd: " &amp; exception.Message]</InArgument>
+                    </ui:SetTransactionStatus.ErrorInfo>
+                  </ui:SetTransactionStatus>
+                  <ui:LogMessage DisplayName="Log - błąd ogólny" sap2010:WorkflowViewState.IdRef="LogMessage_4" Level="Error" Message="[&quot;Performer błąd ogólny &quot; &amp; queueItem.Reference &amp; &quot;: &quot; &amp; exception.Message]" />
+                  <Assign DisplayName="Licznik błędów +1" sap2010:WorkflowViewState.IdRef="Assign_6">
+                    <Assign.To><OutArgument x:TypeArguments="x:Integer">[intBledy]</OutArgument></Assign.To>
+                    <Assign.Value><InArgument x:TypeArguments="x:Integer">[intBledy + 1]</InArgument></Assign.Value>
+                  </Assign>
+                </Sequence>
+              </ActivityAction>
+            </Catch>
+          </TryCatch.Catches>
+        </TryCatch>
+
+        <!-- Pobierz kolejną pozycję -->
+        <ui:GetTransactionItem DisplayName="Get Transaction Item - następna" sap2010:WorkflowViewState.IdRef="GetTransactionItem_2" QueueName="[strNazwaKolejki]">
+          <ui:GetTransactionItem.TransactionItem>
+            <OutArgument x:TypeArguments="uicore:QueueItem">[queueItem]</OutArgument>
+          </ui:GetTransactionItem.TransactionItem>
+        </ui:GetTransactionItem>
+      </Sequence>
+    </While>
+
+    <!-- 5. Zapis pliku SAP -->
+    <If Condition="[dtSap.Rows.Count &gt; 0]" DisplayName="Czy są wiersze do SAP?" sap2010:WorkflowViewState.IdRef="If_3">
+      <If.Then>
+        <ui:WriteRange DataTable="[dtSap]" DisplayName="Write Range Workbook - Gotowe do SAP" sap2010:WorkflowViewState.IdRef="WriteRange_1" SheetName="SAP" StartingCell="A1" WorkbookPath="[Path.Combine(strFolder, &quot;Output&quot;, &quot;Gotowe_do_SAP_&quot; &amp; strZnacznikCzasu &amp; &quot;.xlsx&quot;)]" />
+      </If.Then>
+    </If>
+    <ui:LogMessage DisplayName="Log - koniec Performer" sap2010:WorkflowViewState.IdRef="LogMessage_5" Level="Info" Message="[&quot;Performer KONIEC. Przetworzonych: &quot; &amp; intPrzetworzone.ToString &amp; &quot;, błędów: &quot; &amp; intBledy.ToString]" />
+  </Sequence>
+</Activity>

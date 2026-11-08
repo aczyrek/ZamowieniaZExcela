@@ -7,6 +7,14 @@
       "type": "process"
     },
     {
+      "filePath": "Dispatcher.xaml",
+      "uniqueId": "b5c6d7e8-0001-4000-8000-000000000010",
+      "type": "process"
+    },
+    {
+      "filePath": "Performer.xaml",
+      "uniqueId": "b5c6d7e8-0002-4000-8000-000000000011",
+      "type": "process"
       "filePath": "Test_PrzetworzPlik_PoprawnyWiersz.xaml",
       "uniqueId": "a1b2c3d4-0001-4000-8000-000000000001",
       "type": "testCase"
